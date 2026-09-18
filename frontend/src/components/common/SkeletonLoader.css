@@ -1,0 +1,70 @@
+.skeleton-base {
+  background: linear-gradient(
+    90deg,
+    var(--bg-main) 25%,
+    var(--border-color) 50%,
+    var(--bg-main) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite linear;
+  border-radius: var(--radius-sm);
+}
+
+[data-theme="dark"] .skeleton-base {
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface) 25%,
+    var(--border-color) 50%,
+    var(--bg-surface) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.skeleton-text {
+  height: var(--font-size-base);
+  margin-bottom: var(--spacing-xs);
+  width: 100%;
+}
+
+.skeleton-text:last-child {
+  width: 80%;
+  margin-bottom: 0;
+}
+
+.skeleton-title {
+  height: var(--font-size-xl);
+  margin-bottom: var(--spacing-sm);
+  width: 60%;
+}
+
+.skeleton-card {
+  height: 200px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-stat {
+  height: 100px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-table-row {
+  height: 48px;
+  margin-bottom: 2px;
+}
+
+.skeleton-wrapper-table-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-button {
+  height: 38px;
+  width: 120px;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-badge {
+  height: 24px;
+  width: 80px;
+  border-radius: var(--radius-full);
+}

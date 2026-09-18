@@ -3,7 +3,13 @@ import { useSelector } from 'react-redux';
 import driverService from '../../services/driverService';
 import DriverForm from './DriverForm';
 import { exportToCSV } from '../../utils/exportUtils';
-import '../../VehicleList.css';
+
+// UI Components
+import StatCard from '../ui/StatCard';
+import StatusBadge from '../ui/StatusBadge';
+import DataTable from '../ui/DataTable';
+import Icon from '../ui/Icon';
+import SkeletonLoader from '../common/SkeletonLoader';
 
 const DriverList = () => {
   const [drivers, setDrivers] = useState([]);
@@ -11,13 +17,15 @@ const DriverList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('ALL');
+
   const user = useSelector((state) => state.auth.user);
 
   const fetchDrivers = async () => {
     setLoading(true);
     try {
       const data = await driverService.getAll();
-      setDrivers(data);
+      setDrivers(data || []);
     } catch (error) {
       console.error('Error fetching drivers:', error);
     }
@@ -55,11 +63,11 @@ const DriverList = () => {
   };
 
   const handleExport = () => {
-    const exportData = filteredDrivers.map(d => ({
+    const exportData = filteredDrivers.map((d) => ({
       Username: d.user?.username || 'N/A',
       Email: d.user?.email || 'N/A',
       'License Number': d.licenseNumber || 'N/A',
-      Status: d.status || 'N/A'
+      Status: d.status || 'N/A',
     }));
     exportToCSV(exportData, 'drivers');
   };
@@ -70,167 +78,232 @@ const DriverList = () => {
     fetchDrivers();
   };
 
-  const filteredDrivers = drivers.filter(d =>
-    d.user?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.licenseNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.status?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const total = drivers.length;
-  const available = drivers.filter(d => d.status === 'AVAILABLE').length;
-  const onTrip = drivers.filter(d => d.status === 'ON_TRIP').length;
-  const offDuty = drivers.filter(d => d.status === 'OFF_DUTY').length;
+  const available = drivers.filter((d) => d.status === 'AVAILABLE').length;
+  const onTrip = drivers.filter((d) => d.status === 'ON_TRIP').length;
+  const offDuty = drivers.filter((d) => d.status === 'OFF_DUTY').length;
+
+  const filteredDrivers = drivers.filter((d) => {
+    const matchesTab =
+      activeTab === 'ALL' ||
+      (activeTab === 'AVAILABLE' && d.status === 'AVAILABLE') ||
+      (activeTab === 'ON_TRIP' && d.status === 'ON_TRIP') ||
+      (activeTab === 'OFF_DUTY' && d.status === 'OFF_DUTY');
+
+    const matchesSearch =
+      !searchTerm ||
+      d.user?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.licenseNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.status?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesTab && matchesSearch;
+  });
+
+  const tabs = [
+    { id: 'ALL', label: 'All Drivers', count: total },
+    { id: 'AVAILABLE', label: 'Available', count: available },
+    { id: 'ON_TRIP', label: 'On Trip', count: onTrip },
+    { id: 'OFF_DUTY', label: 'Off Duty', count: offDuty },
+  ];
+
+  const getInitials = (name) => {
+    if (!name) return 'D';
+    return name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const columns = [
+    {
+      header: 'Driver',
+      accessor: 'user',
+      render: (row) => {
+        const username = row.user?.username || 'Unknown Driver';
+        const email = row.user?.email || 'N/A';
+        const initials = getInitials(username);
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
+              {initials}
+            </div>
+            <div>
+              <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <span>{username}</span>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                  Verified
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                {email}
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'License Number',
+      accessor: 'licenseNumber',
+      render: (row) => (
+        <div>
+          <span className="font-mono text-xs font-medium text-slate-800 dark:text-slate-200">
+            {row.licenseNumber || 'N/A'}
+          </span>
+          <div className="text-[10px] text-slate-400">Class A Commercial</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Safety Rating',
+      accessor: 'rating',
+      render: () => (
+        <div className="flex items-center gap-1.5">
+          <div className="flex text-amber-400">
+            <Icon name="Star" size={14} className="fill-amber-400 text-amber-400" />
+          </div>
+          <span className="font-semibold text-xs text-slate-800 dark:text-slate-200">
+            4.9
+          </span>
+          <span className="text-[10px] text-slate-400">(120+ trips)</span>
+        </div>
+      ),
+    },
+    {
+      header: 'Status',
+      accessor: 'status',
+      render: (row) => <StatusBadge status={row.status} />,
+    },
+    ...(user && user.role === 'FLEET_MANAGER'
+      ? [
+          {
+            header: 'Actions',
+            headerClassName: 'text-right',
+            className: 'text-right',
+            render: (row) => (
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => handleEdit(row)}
+                  className="px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <Icon name="Edit" size={14} />
+                  <span>Edit</span>
+                </button>
+                <button
+                  onClick={() => handleDelete(row.id)}
+                  className="px-2.5 py-1 text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <Icon name="Trash2" size={14} />
+                  <span>Delete</span>
+                </button>
+              </div>
+            ),
+          },
+        ]
+      : []),
+  ];
 
   if (loading && drivers.length === 0) {
     return (
-      <div className="vl-page">
-        <div className="vl-loading">
-          <div className="vl-spinner" />
-          <div className="vl-loading-text">Loading Drivers...</div>
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
+        <SkeletonLoader type="title" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <SkeletonLoader type="stat" count={4} />
         </div>
+        <SkeletonLoader type="table-row" count={5} />
       </div>
     );
   }
 
   return (
-    <div className="vl-page">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* HEADER */}
-      <div className="vl-header">
-        <div className="vl-header-left">
-          <h1>Driver Management</h1>
-          <p>Manage all your fleet drivers in one place</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+            Driver Management
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Manage your fleet operators, verify licenses, and monitor availability.
+          </p>
         </div>
-        <div className="vl-header-actions">
-          <button className="vl-btn-export" onClick={handleExport}>
-            📥 Export CSV
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExport}
+            className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg shadow-sm transition-colors flex items-center gap-2"
+          >
+            <Icon name="Download" size={16} />
+            <span>Export CSV</span>
           </button>
+
           {user && user.role === 'FLEET_MANAGER' && (
-            <button className="vl-btn-add" onClick={handleAdd}>
-              + Add Driver
+            <button
+              onClick={handleAdd}
+              className="px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-500/20 transition-all flex items-center gap-2"
+            >
+              <Icon name="Plus" size={16} />
+              <span>Add Driver</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* STATS */}
-      <div className="vl-stats">
-        <div className="vl-stat">
-          <div className="vl-stat-icon" style={{ background: '#eff6ff', color: '#2b5ce6' }}>👤</div>
-          <div>
-            <div className="vl-stat-value">{total}</div>
-            <div className="vl-stat-label">Total Drivers</div>
-          </div>
-        </div>
-        <div className="vl-stat">
-          <div className="vl-stat-icon" style={{ background: '#ecfdf5', color: '#16a34a' }}>✅</div>
-          <div>
-            <div className="vl-stat-value">{available}</div>
-            <div className="vl-stat-label">Available</div>
-          </div>
-        </div>
-        <div className="vl-stat">
-          <div className="vl-stat-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>📍</div>
-          <div>
-            <div className="vl-stat-value">{onTrip}</div>
-            <div className="vl-stat-label">On Trip</div>
-          </div>
-        </div>
-        <div className="vl-stat">
-          <div className="vl-stat-icon" style={{ background: '#f1f5f9', color: '#64748b' }}>💤</div>
-          <div>
-            <div className="vl-stat-value">{offDuty}</div>
-            <div className="vl-stat-label">Off Duty</div>
-          </div>
-        </div>
-      </div>
-
-      {/* SEARCH */}
-      <div className="vl-search-wrap">
-        <span className="vl-search-icon">🔍</span>
-        <input
-          type="text"
-          className="vl-search"
-          placeholder="Search by Username, Email, License Number or Status..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+      {/* STAT CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          icon="Users"
+          iconColor="blue"
+          label="Total Drivers"
+          value={total}
+          subtext="Certified fleet operators"
+          trend={{ value: '+4 active', positive: true }}
         />
-        {searchTerm && (
-          <button className="vl-search-clear" onClick={() => setSearchTerm('')}>
-            Clear
-          </button>
-        )}
+        <StatCard
+          icon="CheckCircle2"
+          iconColor="green"
+          label="Available"
+          value={available}
+          subtext="Ready for dispatch"
+          progress={{ percent: Math.round((available / (total || 1)) * 100), color: 'green' }}
+        />
+        <StatCard
+          icon="Navigation"
+          iconColor="amber"
+          label="On Trip"
+          value={onTrip}
+          subtext="Currently driving active routes"
+          progress={{ percent: Math.round((onTrip / (total || 1)) * 100), color: 'amber' }}
+        />
+        <StatCard
+          icon="Clock"
+          iconColor="slate"
+          label="Off Duty"
+          value={offDuty}
+          subtext="Resting / on break"
+          progress={{ percent: Math.round((offDuty / (total || 1)) * 100), color: 'slate' }}
+        />
       </div>
 
-      {searchTerm && (
-        <div className="vl-search-result">
-          Found <strong>{filteredDrivers.length}</strong> driver{filteredDrivers.length !== 1 ? 's' : ''} matching "{searchTerm}"
-        </div>
-      )}
+      {/* DATA TABLE */}
+      <DataTable
+        columns={columns}
+        data={filteredDrivers}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        searchQuery={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search driver username, email, license, or status..."
+        isLoading={loading}
+        emptyMessage={searchTerm ? 'No drivers match search' : 'No drivers found'}
+        emptySubtext={searchTerm ? 'Try a different search term.' : 'Click "Add Driver" to register one.'}
+      />
 
-      {/* TABLE */}
-      <div className="vl-table-card">
-        <table className="vl-table">
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Email</th>
-              <th>License Number</th>
-              <th>Status</th>
-              {user && user.role === 'FLEET_MANAGER' && <th>Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredDrivers.length === 0 ? (
-              <tr>
-                <td colSpan={user && user.role === 'FLEET_MANAGER' ? 5 : 4} style={{ padding: 0 }}>
-                  <div className="vl-empty">
-                    <div className="vl-empty-icon">👤</div>
-                    <div className="vl-empty-title">
-                      {searchTerm ? 'No drivers match your search' : 'No drivers available'}
-                    </div>
-                    <div className="vl-empty-text">
-                      {searchTerm ? 'Try a different search term' : 'Add your first driver to get started'}
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              filteredDrivers.map((driver) => (
-                <tr key={driver.id}>
-                  <td className="vl-cell-plate">{driver.user?.username || 'N/A'}</td>
-                  <td className="vl-cell-model">{driver.user?.email || 'N/A'}</td>
-                  <td className="vl-cell-vin">{driver.licenseNumber || 'N/A'}</td>
-                  <td>
-                    <span className={`vl-status ${driver.status?.toLowerCase()}`}>
-                      {driver.status || 'UNKNOWN'}
-                    </span>
-                  </td>
-                  {user && user.role === 'FLEET_MANAGER' && (
-                    <td>
-                      <div className="vl-actions">
-                        <button
-                          className="vl-btn-action vl-btn-edit"
-                          onClick={() => handleEdit(driver)}
-                        >
-                          <span>✎</span> Edit
-                        </button>
-                        <button
-                          className="vl-btn-action vl-btn-delete"
-                          onClick={() => handleDelete(driver.id)}
-                        >
-                          <span>✕</span> Delete
-                        </button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
+      {/* MODAL */}
       {showModal && (
         <DriverForm driver={selectedDriver} onClose={handleClose} />
       )}

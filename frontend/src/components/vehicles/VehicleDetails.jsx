@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import vehicleService from '../../services/vehicleService';
 import tripService from '../../services/tripService';
 import maintenanceService from '../../services/maintenanceService';
@@ -13,7 +12,6 @@ const VehicleDetails = () => {
   const [trips, setTrips] = useState([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
     const fetchData = async () => {

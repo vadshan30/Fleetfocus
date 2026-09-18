@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { logout } from '../../store/slices/authSlice';
 import DarkModeToggle from '../common/DarkModeToggle';
+import './Layout.css';
 
 const TopNavbar = ({ toggleSidebar }) => {
   const user = useSelector((state) => state.auth.user);
@@ -31,82 +32,22 @@ const TopNavbar = ({ toggleSidebar }) => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      background: 'white',
-      padding: '0 24px',
-      height: '64px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-      borderBottom: '1px solid #e2e8f0'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <button
-          onClick={toggleSidebar}
-          style={{
-            background: 'none',
-            border: 'none',
-            fontSize: '24px',
-            cursor: 'pointer',
-            color: '#1a2a3a',
-            padding: '4px 8px',
-            borderRadius: '6px',
-            transition: 'background 0.3s ease'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-        >
+    <nav className="ff-top-navbar">
+      <div className="ff-nav-left">
+        <button onClick={toggleSidebar} className="ff-menu-btn">
           ☰
         </button>
-        <span style={{
-          fontSize: '18px',
-          fontWeight: '700',
-          color: '#1a2a3a'
-        }}>
+        <span className="ff-brand-title">
           🚚 FleetFocus
         </span>
       </div>
 
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        flex: 1,
-        justifyContent: 'center'
-      }}>
+      <div className="ff-nav-center">
         {menuItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              color: isActive(item.path) ? '#2563eb' : '#64748b',
-              background: isActive(item.path) ? '#eff6ff' : 'transparent',
-              fontWeight: isActive(item.path) ? '600' : '500',
-              fontSize: '14px',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              if (!isActive(item.path)) {
-                e.currentTarget.style.background = '#f1f5f9';
-                e.currentTarget.style.color = '#1a2a3a';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isActive(item.path)) {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = '#64748b';
-              }
-            }}
+            className={`ff-nav-link ${isActive(item.path) ? 'active' : ''}`}
           >
             <span>{item.icon}</span>
             <span>{item.label}</span>
@@ -114,31 +55,12 @@ const TopNavbar = ({ toggleSidebar }) => {
         ))}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{
-          fontSize: '13px',
-          color: '#64748b',
-          fontWeight: '500'
-        }}>
+      <div className="ff-nav-right">
+        <span className="ff-welcome-text">
           Welcome, {user.username}!
         </span>
         <DarkModeToggle />
-        <button
-          onClick={handleLogout}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#ef4444',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: '500',
-            padding: '6px 12px',
-            borderRadius: '6px',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#fee2e2'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-        >
+        <button onClick={handleLogout} className="ff-logout-btn">
           Logout
         </button>
       </div>

@@ -1,0 +1,36 @@
+.error-state {
+  display: flex;
+  align-items: center;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin: var(--spacing-md) 0;
+  gap: var(--spacing-md);
+}
+
+.error-icon {
+  font-size: 24px;
+}
+
+.error-content {
+  flex: 1;
+}
+
+.error-title {
+  margin: 0 0 4px 0;
+  color: var(--color-danger-text);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+.error-message {
+  margin: 0;
+  color: var(--color-danger-text);
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+}
+
+.error-retry-btn {
+  white-space: nowrap;
+}
