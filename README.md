@@ -61,25 +61,6 @@ An enterprise-grade Fleet Management System built with **Spring Boot 3** and **R
 
 ---
 
-## 📸 Screenshots
-
-| Dashboard Command Center | Live Fleet Telemetry |
-|:---:|:---:|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Live Fleet](docs/screenshots/live.png) |
-
-| Vehicle Inventory | Driver Management |
-|:---:|:---:|
-| ![Vehicles](docs/screenshots/vehicles.png) | ![Drivers](docs/screenshots/drivers.png) |
-
-| Trip Log & Dispatch | Service & Maintenance |
-|:---:|:---:|
-| ![Trips](docs/screenshots/trips.png) | ![Maintenance](docs/screenshots/maintenance.png) |
-
-| Authentication |
-|:---:|
-| ![Login](docs/screenshots/login.png) |
-
----
 
 ## 🛠️ Tech Stack
 
