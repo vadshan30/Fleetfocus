@@ -153,18 +153,21 @@ const Dashboard = () => {
       </div>
 
       {/* KPI CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="cursor-pointer" onClick={() => navigate('/vehicles')}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+        <div className="cursor-pointer h-full" onClick={() => navigate('/vehicles')}>
           <StatCard
+            className="h-full"
             icon="Truck"
             iconColor="blue"
             label="Total Fleet"
             value={totalVehicles}
             subtext="Registered active vehicles"
+            progress={{ percent: 100, color: 'blue' }}
           />
         </div>
-        <div className="cursor-pointer" onClick={() => navigate('/trips')}>
+        <div className="cursor-pointer h-full" onClick={() => navigate('/trips')}>
           <StatCard
+            className="h-full"
             icon="Navigation"
             iconColor="green"
             label="On Trip"
@@ -173,8 +176,9 @@ const Dashboard = () => {
             progress={{ percent: Math.round((onTrip / (totalVehicles || 1)) * 100), color: 'green' }}
           />
         </div>
-        <div className="cursor-pointer" onClick={() => navigate('/maintenance')}>
+        <div className="cursor-pointer h-full" onClick={() => navigate('/maintenance')}>
           <StatCard
+            className="h-full"
             icon="Wrench"
             iconColor="amber"
             label="Maintenance"
@@ -183,8 +187,9 @@ const Dashboard = () => {
             progress={{ percent: Math.round((maintenance / (totalVehicles || 1)) * 100), color: 'amber' }}
           />
         </div>
-        <div className="cursor-pointer" onClick={() => navigate('/vehicles')}>
+        <div className="cursor-pointer h-full" onClick={() => navigate('/vehicles')}>
           <StatCard
+            className="h-full"
             icon="CheckCircle2"
             iconColor="purple"
             label="Available"
