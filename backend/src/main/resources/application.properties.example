@@ -1,0 +1,32 @@
+# ============================================
+# APPLICATION
+# ============================================
+spring.application.name=demo
+server.port=8080
+
+# ============================================
+# DATABASE CONFIGURATION
+# ============================================
+spring.datasource.url=jdbc:mysql://localhost:3306/fleetfocus_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+spring.datasource.username=YOUR_DB_USERNAME
+spring.datasource.password=YOUR_DB_PASSWORD
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# ============================================
+# JPA / HIBERNATE
+# ============================================
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.open-in-view=false
+
+# ============================================
+# JWT CONFIGURATION
+# ============================================
+jwt.secret=YOUR_BASE64_ENCODED_SECRET_KEY_HERE
+jwt.expiration=86400000
+
+# ============================================
+# MISC
+# ============================================
+spring.main.allow-circular-references=true

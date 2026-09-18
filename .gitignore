@@ -1,0 +1,14 @@
+
+# ============================================
+# SPRING BOOT - SENSITIVE CONFIG
+# ============================================
+application.properties
+application-*.properties
+!application.properties.example
+*.env
+.env
+.env.local
+.env.production
+.env.development
+secrets/
+credentials.json

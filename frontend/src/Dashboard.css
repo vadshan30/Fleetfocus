@@ -1,0 +1,739 @@
+/* =========================================================
+   FLEETFOCUS - COMPLETE DASHBOARD UI (PREMIUM)
+   ========================================================= */
+
+.ff-dashboard {
+  background: #f0f4f8;
+  min-height: 100vh;
+  padding: 24px 28px 60px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #0b1220;
+  width: 100%;
+  letter-spacing: -0.01em;
+}
+
+/* =========================================================
+   HERO BANNER (KEEP - You loved this)
+   ========================================================= */
+
+.ff-hero-banner {
+  position: relative;
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
+  border-radius: 24px;
+  padding: 48px 56px;
+  margin-bottom: 28px;
+  overflow: hidden;
+  color: white;
+  box-shadow: 0 20px 50px rgba(37, 99, 235, 0.25);
+}
+
+.ff-hero-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.ff-hero-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -60%;
+  left: -5%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.ff-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.ff-hero-text h1 {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -1.4px;
+  margin: 0 0 12px 0;
+  line-height: 1.15;
+  color: white;
+}
+
+.ff-hero-text p {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  font-weight: 500;
+  max-width: 520px;
+}
+
+.ff-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ff-hero-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 28px;
+  background: white;
+  color: #1e3a8a;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.ff-hero-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.ff-hero-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 28px;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(10px);
+}
+
+.ff-hero-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   NEW KPI CARDS - PREMIUM STYLE
+   ========================================================= */
+
+.ff-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.ff-kpi-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 26px;
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #e5eaf1;
+  box-shadow: 0 2px 8px rgba(11, 18, 32, 0.04);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.ff-kpi-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--kpi-color, #2b5ce6);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.ff-kpi-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(11, 18, 32, 0.1);
+  border-color: transparent;
+}
+
+.ff-kpi-item:hover::before {
+  transform: scaleX(1);
+}
+
+.ff-kpi-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.ff-kpi-item:hover .ff-kpi-icon-wrap {
+  transform: scale(1.08) rotate(-5deg);
+}
+
+.ff-kpi-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.ff-kpi-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.ff-kpi-number {
+  font-size: 36px;
+  font-weight: 800;
+  color: #0b1220;
+  line-height: 1;
+  letter-spacing: -1.6px;
+}
+
+.ff-kpi-note {
+  font-size: 12.5px;
+  color: #94a3b8;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.ff-card {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  border: 1px solid #e5eaf1;
+  box-shadow: 0 2px 8px rgba(11, 18, 32, 0.04);
+  transition: box-shadow 0.25s ease;
+}
+
+.ff-card:hover {
+  box-shadow: 0 12px 32px rgba(11, 18, 32, 0.08);
+}
+
+.ff-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ff-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ff-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.ff-card-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0b1220;
+  margin: 0;
+  letter-spacing: -0.4px;
+}
+
+.ff-card-subtitle {
+  font-size: 12.5px;
+  color: #64748b;
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.ff-card-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #f1f5f9;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* =========================================================
+   DONUT + RANKING GRID
+   ========================================================= */
+
+.ff-grid-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.ff-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.ff-donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 8px 0;
+}
+
+.ff-donut-svg-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ff-donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.ff-donut-value {
+  font-size: 40px;
+  font-weight: 800;
+  color: #0b1220;
+  line-height: 1;
+  letter-spacing: -1.8px;
+}
+
+.ff-donut-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+.ff-donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+}
+
+.ff-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: all 0.22s ease;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.ff-legend-row:hover,
+.ff-legend-row.active {
+  background: #f5f7fb;
+  transform: translateX(3px);
+}
+
+.ff-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+}
+
+.ff-legend-row:hover .ff-legend-dot,
+.ff-legend-row.active .ff-legend-dot {
+  transform: scale(1.3);
+}
+
+.ff-legend-name {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.ff-legend-row.active .ff-legend-name {
+  color: #0b1220;
+  font-weight: 700;
+}
+
+.ff-legend-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0b1220;
+}
+
+.ff-legend-pct {
+  font-size: 11.5px;
+  color: #94a3b8;
+  min-width: 46px;
+  text-align: right;
+  font-weight: 700;
+}
+
+/* =========================================================
+   RANKING LIST
+   ========================================================= */
+
+.ff-ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ff-rank-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid transparent;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.ff-rank-row:hover {
+  background: white;
+  border-color: #cbd5e1;
+  transform: translateX(6px);
+  box-shadow: 0 6px 20px rgba(11, 18, 32, 0.06);
+}
+
+.ff-rank-row.top-1 {
+  background: linear-gradient(90deg, #fef3c7 0%, #fffbeb 100%);
+  border-color: #fde68a;
+}
+
+.ff-rank-row.top-2 {
+  background: linear-gradient(90deg, #e0e7ff 0%, #f5f7ff 100%);
+  border-color: #c7d2fe;
+}
+
+.ff-rank-row.top-3 {
+  background: linear-gradient(90deg, #fed7aa 0%, #fff7ed 100%);
+  border-color: #fdba74;
+}
+
+.ff-rank-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ff-rank-medal {
+  font-size: 22px;
+  min-width: 30px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ff-rank-info {
+  min-width: 0;
+}
+
+.ff-rank-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0b1220;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-rank-sub {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.ff-rank-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.ff-rank-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0b1220;
+  letter-spacing: -0.3px;
+}
+
+.ff-rank-tag {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.ff-tag-gold { background: #fef3c7; color: #92400e; }
+.ff-tag-blue { background: #dbeafe; color: #1e40af; }
+.ff-tag-gray { background: #f1f5f9; color: #64748b; }
+
+/* =========================================================
+   FUEL METRICS
+   ========================================================= */
+
+.ff-fuel-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.ff-fuel-metric {
+  padding: 22px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border-left: 4px solid;
+  transition: all 0.25s ease;
+}
+
+.ff-fuel-metric:hover {
+  background: white;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(11, 18, 32, 0.08);
+}
+
+.ff-fuel-metric-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ff-fuel-metric-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 2px 6px rgba(11, 18, 32, 0.05);
+}
+
+.ff-fuel-metric-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #64748b;
+}
+
+.ff-fuel-metric-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0b1220;
+  line-height: 1;
+  letter-spacing: -1.4px;
+}
+
+.ff-fuel-metric-unit {
+  font-size: 16px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-left: 6px;
+}
+
+.ff-fuel-metric-sub {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   MAINTENANCE ALERTS
+   ========================================================= */
+
+.ff-maint-alert {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 14px;
+  margin-bottom: 10px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: 1.5px solid;
+}
+
+.ff-maint-alert.overdue {
+  background: linear-gradient(90deg, #fef2f2 0%, #fff5f5 100%);
+  border-color: #fecaca;
+}
+
+.ff-maint-alert.due {
+  background: linear-gradient(90deg, #fffbeb 0%, #fffdf5 100%);
+  border-color: #fde68a;
+}
+
+.ff-maint-alert.ok {
+  background: linear-gradient(90deg, #f0fdf4 0%, #f7fef9 100%);
+  border-color: #bbf7d0;
+}
+
+.ff-maint-alert:hover {
+  transform: translateX(6px);
+  box-shadow: 0 8px 24px rgba(11, 18, 32, 0.08);
+}
+
+.ff-maint-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.ff-maint-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ff-maint-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0b1220;
+  letter-spacing: -0.3px;
+}
+
+.ff-maint-sub {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.ff-maint-status {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  color: white;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.ff-maint-status.overdue { background: #dc2626; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25); }
+.ff-maint-status.due     { background: #f59e0b; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25); }
+.ff-maint-status.ok      { background: #16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25); }
+
+/* =========================================================
+   EMPTY
+   ========================================================= */
+
+.ff-empty {
+  text-align: center;
+  padding: 44px 20px;
+  color: #64748b;
+}
+
+.ff-empty-icon {
+  font-size: 52px;
+  margin-bottom: 12px;
+  opacity: 0.55;
+}
+
+.ff-empty-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0b1220;
+  margin-bottom: 4px;
+}
+
+.ff-empty-text {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* =========================================================
+   DRIVER PERFORMANCE WRAPPER
+   ========================================================= */
+
+.ff-driver-performance {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  border: 1px solid #e5eaf1;
+  box-shadow: 0 2px 8px rgba(11, 18, 32, 0.04);
+  margin-bottom: 24px;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .ff-kpi-row,
+  .ff-fuel-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ff-grid-row,
+  .ff-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .ff-hero-text h1 {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ff-dashboard {
+    padding: 16px;
+  }
+  .ff-hero-banner {
+    padding: 32px 24px;
+  }
+  .ff-hero-text h1 {
+    font-size: 24px;
+  }
+  .ff-kpi-row,
+  .ff-fuel-grid {
+    grid-template-columns: 1fr;
+  }
+}

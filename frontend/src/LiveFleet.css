@@ -1,0 +1,408 @@
+/* =========================================================
+   FLEETFOCUS - LIVE FLEET MONITORING
+   ========================================================= */
+
+.lf-page {
+  background: #f0f4f8;
+  min-height: 100vh;
+  padding: 24px 28px 60px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #0b1220;
+  width: 100%;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.lf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.lf-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.lf-header-left h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  color: #0b1220;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.lf-header-left p {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+.lf-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.lf-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #dc2626;
+  animation: lfPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes lfPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.lf-refresh-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.lf-refresh-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16a34a;
+}
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.lf-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.lf-stat {
+  background: white;
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1px solid #eef2f6;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.lf-stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.lf-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0b1220;
+  letter-spacing: -0.6px;
+  line-height: 1.1;
+}
+
+.lf-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.lf-table-card {
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #eef2f6;
+  overflow: hidden;
+}
+
+.lf-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lf-table thead th {
+  background: #f8fafc;
+  padding: 14px 20px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #94a3b8;
+  border-bottom: 1px solid #eef2f6;
+  white-space: nowrap;
+}
+
+.lf-table tbody td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 14px;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.lf-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.lf-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.lf-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Vehicle Cell */
+.lf-vehicle-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lf-vehicle-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.lf-vehicle-info {
+  min-width: 0;
+}
+
+.lf-vehicle-plate {
+  font-weight: 600;
+  color: #0b1220;
+  font-size: 14px;
+}
+
+.lf-vehicle-model {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* Speed */
+.lf-speed {
+  font-weight: 600;
+  color: #0b1220;
+  font-variant-numeric: tabular-nums;
+}
+
+.lf-speed.warning {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.lf-speed-icon {
+  margin-left: 6px;
+  font-size: 14px;
+}
+
+/* Fuel Bar */
+.lf-fuel-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lf-fuel-bar {
+  width: 120px;
+  height: 8px;
+  background: #eef2f6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.lf-fuel-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.lf-fuel-fill.high { background: #16a34a; }
+.lf-fuel-fill.medium { background: #f59e0b; }
+.lf-fuel-fill.low { background: #dc2626; }
+
+.lf-fuel-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  min-width: 40px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   STATUS BADGES
+   ========================================================= */
+
+.lf-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.lf-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.lf-status.available {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.lf-status.on_trip,
+.lf-status.on-trip {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.lf-status.under_maintenance,
+.lf-status.under-maintenance {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.lf-status.off_duty,
+.lf-status.off-duty {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.lf-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.lf-empty-icon {
+  font-size: 56px;
+  margin-bottom: 14px;
+  opacity: 0.4;
+}
+
+.lf-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0b1220;
+  margin-bottom: 4px;
+}
+
+.lf-empty-text {
+  font-size: 13.5px;
+  color: #94a3b8;
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.lf-loading {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.lf-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid #eef2f6;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  animation: lfSpin 0.8s linear infinite;
+}
+
+@keyframes lfSpin {
+  to { transform: rotate(360deg); }
+}
+
+.lf-loading-text {
+  font-size: 13.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+  .lf-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .lf-page {
+    padding: 16px;
+  }
+
+  .lf-header-left h1 {
+    font-size: 22px;
+  }
+
+  .lf-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .lf-table {
+    min-width: 700px;
+  }
+
+  .lf-table-card {
+    overflow-x: auto;
+  }
+}

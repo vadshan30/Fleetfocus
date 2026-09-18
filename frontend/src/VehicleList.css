@@ -1,0 +1,507 @@
+/* =========================================================
+   FLEETFOCUS - CLEAN VEHICLE INVENTORY
+   ========================================================= */
+
+.vl-page {
+  background: #f0f4f8;
+  min-height: 100vh;
+  padding: 24px 28px 60px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #0b1220;
+  width: 100%;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.vl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.vl-header-left h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  color: #0b1220;
+  margin: 0 0 4px 0;
+  line-height: 1.15;
+}
+
+.vl-header-left p {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.vl-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vl-btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  background: white;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vl-btn-export:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0b1220;
+}
+
+.vl-btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vl-btn-add:hover {
+  background: #1d4ed8;
+}
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.vl-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.vl-stat {
+  background: white;
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1px solid #eef2f6;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.vl-stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.vl-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0b1220;
+  letter-spacing: -0.6px;
+  line-height: 1.1;
+}
+
+.vl-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.vl-search-wrap {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.vl-search {
+  width: 100%;
+  padding: 13px 18px 13px 44px;
+  background: white;
+  border: 1.5px solid #eef2f6;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #0b1220;
+  outline: none;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.vl-search:focus {
+  border-color: #cbd5e1;
+}
+
+.vl-search::placeholder {
+  color: #94a3b8;
+}
+
+.vl-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.vl-search-clear {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.vl-search-result {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.vl-table-card {
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #eef2f6;
+  overflow: hidden;
+}
+
+.vl-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vl-table thead th {
+  background: #f8fafc;
+  padding: 14px 20px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #94a3b8;
+  border-bottom: 1px solid #eef2f6;
+  white-space: nowrap;
+}
+
+.vl-table thead th:last-child {
+  text-align: right;
+}
+
+.vl-table tbody td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 14px;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.vl-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.vl-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.vl-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.vl-cell-vin {
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  font-size: 12.5px !important;
+  color: #94a3b8 !important;
+}
+
+.vl-cell-plate {
+  font-weight: 600 !important;
+  color: #0b1220 !important;
+  font-size: 14px !important;
+}
+
+.vl-cell-model {
+  color: #475569 !important;
+}
+
+.vl-cell-mileage {
+  font-weight: 600 !important;
+  color: #0b1220 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   STATUS BADGES
+   ========================================================= */
+
+.vl-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.vl-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.vl-status.available {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.vl-status.on_trip,
+.vl-status.on-trip {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.vl-status.under_maintenance,
+.vl-status.under-maintenance {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.vl-status.off_duty,
+.vl-status.off-duty {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* =========================================================
+   ACTION BUTTONS - FORCED CLEAN STYLE
+   ========================================================= */
+
+.vl-actions {
+  display: flex !important;
+  gap: 10px !important;
+  justify-content: flex-end !important;
+}
+
+.vl-btn-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 8px 16px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #e5eaf1 !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-family: inherit !important;
+  line-height: 1 !important;
+}
+
+.vl-btn-action span {
+  font-size: 13px !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* Edit Button - FORCED */
+.vl-btn-action.vl-btn-edit {
+  color: #2563eb !important;
+  border-color: #dbeafe !important;
+  background: #ffffff !important;
+}
+
+.vl-btn-action.vl-btn-edit:hover {
+  background: #eff6ff !important;
+  border-color: #2563eb !important;
+  color: #2563eb !important;
+}
+
+/* Delete Button - FORCED WHITE */
+.vl-btn-action.vl-btn-delete {
+  color: #dc2626 !important;
+  border-color: #fee2e2 !important;
+  background: #ffffff !important;
+}
+
+.vl-btn-action.vl-btn-delete:hover {
+  background: #fef2f2 !important;
+  border-color: #dc2626 !important;
+  color: #dc2626 !important;
+}
+
+/* =========================================================
+   PAGINATION
+   ========================================================= */
+
+.vl-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.vl-pagination-btn {
+  padding: 9px 18px;
+  background: white;
+  color: #475569;
+  border: 1.5px solid #eef2f6;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vl-pagination-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.vl-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.vl-pagination-info {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  padding: 0 8px;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.vl-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.vl-empty-icon {
+  font-size: 56px;
+  margin-bottom: 14px;
+  opacity: 0.4;
+}
+
+.vl-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0b1220;
+  margin-bottom: 4px;
+}
+
+.vl-empty-text {
+  font-size: 13.5px;
+  color: #94a3b8;
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.vl-loading {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.vl-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid #eef2f6;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  animation: vlSpin 0.8s linear infinite;
+}
+
+@keyframes vlSpin {
+  to { transform: rotate(360deg); }
+}
+
+.vl-loading-text {
+  font-size: 13.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+  .vl-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .vl-page {
+    padding: 16px;
+  }
+
+  .vl-header-left h1 {
+    font-size: 22px;
+  }
+
+  .vl-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .vl-table {
+    min-width: 700px;
+  }
+
+  .vl-table-card {
+    overflow-x: auto;
+  }
+}

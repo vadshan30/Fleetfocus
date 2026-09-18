@@ -1,0 +1,441 @@
+/* =========================================================
+   FLEETFOCUS - DRIVER MANAGEMENT
+   ========================================================= */
+
+.dl-page {
+  background: #f0f4f8;
+  min-height: 100vh;
+  padding: 24px 28px 60px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #0b1220;
+  width: 100%;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.dl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.dl-header-left h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  color: #0b1220;
+  margin: 0 0 4px 0;
+  line-height: 1.15;
+}
+
+.dl-header-left p {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.dl-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dl-btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  background: white;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dl-btn-export:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0b1220;
+}
+
+.dl-btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dl-btn-add:hover {
+  background: #1d4ed8;
+}
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.dl-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.dl-stat {
+  background: white;
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1px solid #eef2f6;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dl-stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.dl-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0b1220;
+  letter-spacing: -0.6px;
+  line-height: 1.1;
+}
+
+.dl-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.dl-search-wrap {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.dl-search {
+  width: 100%;
+  padding: 13px 18px 13px 44px;
+  background: white;
+  border: 1.5px solid #eef2f6;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #0b1220;
+  outline: none;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.dl-search:focus {
+  border-color: #cbd5e1;
+}
+
+.dl-search::placeholder {
+  color: #94a3b8;
+}
+
+.dl-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.dl-search-clear {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.dl-search-result {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.dl-table-card {
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #eef2f6;
+  overflow: hidden;
+}
+
+.dl-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dl-table thead th {
+  background: #f8fafc;
+  padding: 14px 20px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #94a3b8;
+  border-bottom: 1px solid #eef2f6;
+  white-space: nowrap;
+}
+
+.dl-table thead th:last-child {
+  text-align: right;
+}
+
+.dl-table tbody td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 14px;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.dl-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.dl-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.dl-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Username */
+.dl-cell-username {
+  font-weight: 600 !important;
+  color: #0b1220 !important;
+}
+
+/* Email */
+.dl-cell-email {
+  color: #64748b !important;
+  font-size: 13.5px !important;
+}
+
+/* License */
+.dl-cell-license {
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  font-size: 13px !important;
+  color: #475569 !important;
+  letter-spacing: 0.3px;
+}
+
+/* =========================================================
+   STATUS BADGES
+   ========================================================= */
+
+.dl-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dl-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.dl-status.available {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.dl-status.on_trip,
+.dl-status.on-trip {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.dl-status.off_duty,
+.dl-status.off-duty {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* =========================================================
+   ACTION BUTTONS - ICONS + TEXT
+   ========================================================= */
+
+.dl-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.dl-btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dl-btn-edit {
+  color: #2563eb;
+}
+
+.dl-btn-edit:hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.dl-btn-delete {
+  color: #dc2626;
+}
+
+.dl-btn-delete:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.dl-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.dl-empty-icon {
+  font-size: 56px;
+  margin-bottom: 14px;
+  opacity: 0.4;
+}
+
+.dl-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0b1220;
+  margin-bottom: 4px;
+}
+
+.dl-empty-text {
+  font-size: 13.5px;
+  color: #94a3b8;
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.dl-loading {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.dl-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid #eef2f6;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  animation: dlSpin 0.8s linear infinite;
+}
+
+@keyframes dlSpin {
+  to { transform: rotate(360deg); }
+}
+
+.dl-loading-text {
+  font-size: 13.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+  .dl-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .dl-page {
+    padding: 16px;
+  }
+
+  .dl-header-left h1 {
+    font-size: 22px;
+  }
+
+  .dl-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .dl-table {
+    min-width: 700px;
+  }
+
+  .dl-table-card {
+    overflow-x: auto;
+  }
+}
