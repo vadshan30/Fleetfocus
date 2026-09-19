@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchVehicles } from '../../store/slices/vehicleSlice';
@@ -6,6 +6,7 @@ import tripService from '../../services/tripService';
 import driverService from '../../services/driverService';
 import maintenanceService from '../../services/maintenanceService';
 import DriverPerformance from './DriverPerformance';
+import { parseISO, isWithinInterval, startOfDay, endOfDay, subDays, format } from 'date-fns';
 
 // UI Components
 import StatCard from '../ui/StatCard';
@@ -16,6 +17,8 @@ import Icon from '../ui/Icon';
 import FleetUtilizationChart from '../analytics/FleetUtilizationChart';
 import DriverComparisonChart from '../analytics/DriverComparisonChart';
 import CostBreakdownChart from '../analytics/CostBreakdownChart';
+import DateRangeFilter from '../analytics/DateRangeFilter';
+import TripHeatmap from '../analytics/TripHeatmap';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -27,9 +30,20 @@ const Dashboard = () => {
   const [drivers, setDrivers] = useState([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState([]);
   const [hoveredSegment, setHoveredSegment] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [dateRange, setDateRange] = useState(() => {
+    const end = endOfDay(new Date());
+    const start = startOfDay(subDays(end, 29));
+    return {
+      startDate: format(start, 'yyyy-MM-dd'),
+      endDate: format(end, 'yyyy-MM-dd'),
+    };
+  });
 
   useEffect(() => {
     if (!user) return;
+    setIsLoading(true);
     dispatch(fetchVehicles({ page: 0, size: 100 }));
     Promise.all([
       tripService.getAll().catch(() => []),
@@ -39,8 +53,24 @@ const Dashboard = () => {
       setTrips(tripsData || []);
       setDrivers(driversData || []);
       setMaintenanceLogs(logsData || []);
+      setIsLoading(false);
     });
   }, [dispatch, user]);
+
+  const filteredTrips = useMemo(() => {
+    if (!dateRange.startDate || !dateRange.endDate) return trips;
+    const start = startOfDay(parseISO(dateRange.startDate));
+    const end = endOfDay(parseISO(dateRange.endDate));
+    return trips.filter((t) => {
+      if (!t.startTime) return false;
+      try {
+        const tripStart = parseISO(t.startTime);
+        return isWithinInterval(tripStart, { start, end });
+      } catch {
+        return false;
+      }
+    });
+  }, [trips, dateRange]);
 
   if (!user) return null;
 
@@ -156,6 +186,9 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* DATE RANGE FILTER */}
+      <DateRangeFilter value={dateRange} onChange={setDateRange} isLoading={isLoading} />
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
@@ -359,16 +392,19 @@ const Dashboard = () => {
       </div>
 
       {/* FLEET UTILIZATION CHART */}
-      <FleetUtilizationChart />
+      <FleetUtilizationChart trips={filteredTrips} vehicles={vehicles} />
 
       {/* DRIVER COMPARISON CHART */}
-      <DriverComparisonChart drivers={drivers} trips={trips} />
+      <DriverComparisonChart drivers={drivers} trips={filteredTrips} />
 
       {/* COST BREAKDOWN CHART */}
-      <CostBreakdownChart trips={trips} maintenanceLogs={maintenanceLogs} />
+      <CostBreakdownChart trips={filteredTrips} maintenanceLogs={maintenanceLogs} />
+
+      {/* TRIP HEATMAP */}
+      <TripHeatmap trips={filteredTrips} />
 
       {/* DRIVER PERFORMANCE COMPONENT */}
-      <DriverPerformance trips={trips} drivers={drivers} />
+      <DriverPerformance trips={filteredTrips} drivers={drivers} />
 
       {/* FUEL & EFFICIENCY ANALYTICS */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 shadow-sm">

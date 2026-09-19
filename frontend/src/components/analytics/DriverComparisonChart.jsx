@@ -43,6 +43,47 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+const Cell = ({ children, fill }) => <rect fill={fill} />;
+
+const ExportButton = ({ chartType, data, title, subtitle, filename }) => {
+  const { exportToPDF, exportToExcel, prepareChartExportData } = require('../../utils/exportUtils');
+
+  const handleExportPDF = () => {
+    const exportData = prepareChartExportData(data, chartType);
+    exportToPDF(exportData, filename, title, subtitle);
+  };
+
+  const handleExportExcel = () => {
+    const exportData = prepareChartExportData(data, chartType);
+    exportToExcel(exportData, filename);
+  };
+
+  if (!data || data.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={handleExportPDF}
+        className="px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-colors flex items-center gap-1"
+        title="Export as PDF"
+      >
+        <Icon name="FileText" size={14} />
+        <span>PDF</span>
+      </button>
+      <button
+        type="button"
+        onClick={handleExportExcel}
+        className="px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-colors flex items-center gap-1"
+        title="Export as Excel"
+      >
+        <Icon name="Table" size={14} />
+        <span>Excel</span>
+      </button>
+    </div>
+  );
+};
+
 const DriverComparisonChart = ({
   drivers = [],
   trips = [],
@@ -107,9 +148,20 @@ const DriverComparisonChart = ({
             </p>
           </div>
         </div>
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-          {chartData.length} Drivers
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+            {chartData.length} Drivers
+          </span>
+          {hasData && (
+            <ExportButton
+              chartType="driverComparison"
+              data={chartData}
+              title="Driver Trip Comparison"
+              subtitle="Total vs completed trips per driver"
+              filename="fleetfocus-driver-comparison"
+            />
+          )}
+        </div>
       </div>
 
       {!hasData ? (
@@ -193,9 +245,5 @@ const DriverComparisonChart = ({
     </div>
   );
 };
-
-const Cell = ({ children, fill }) => (
-  <rect fill={fill} />
-);
 
 export default DriverComparisonChart;

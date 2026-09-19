@@ -1,6 +1,16 @@
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+
+const notify = (message, type = 'success') => {
+  if (window.addNotification) {
+    window.addNotification(message, type);
+  }
+};
+
 export const exportToCSV = (data, filename) => {
   if (!data || data.length === 0) {
-    alert('No data to export!');
+    notify('No data to export!', 'error');
     return;
   }
 
@@ -9,7 +19,7 @@ export const exportToCSV = (data, filename) => {
   csvRows.push(headers.join(','));
 
   for (const row of data) {
-    const values = headers.map(header => {
+    const values = headers.map((header) => {
       let val = row[header] || '';
       if (typeof val === 'string' && val.includes(',')) {
         val = `"${val}"`;
@@ -28,13 +38,120 @@ export const exportToCSV = (data, filename) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${filename}_${new Date().toISOString().slice(0,10)}.csv`;
+  link.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 
-  if (window.addNotification) {
-    window.addNotification(`Exported ${data.length} records successfully!`, 'success');
+  notify(`Exported ${data.length} records to CSV`, 'success');
+};
+
+export const exportToPDF = (data, filename, title, subtitle = '') => {
+  if (!data || data.length === 0) {
+    notify('No data to export!', 'error');
+    return;
+  }
+
+  try {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title, pageWidth / 2, 20, { align: 'center' });
+
+    if (subtitle) {
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100);
+      doc.text(subtitle, pageWidth / 2, 28, { align: 'center' });
+    }
+
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(
+      `Generated: ${new Date().toLocaleString()} | Records: ${data.length}`,
+      pageWidth / 2,
+      34,
+      { align: 'center' }
+    );
+
+    const headers = Object.keys(data[0]);
+    const rows = data.map((row) => headers.map((h) => row[h] || ''));
+
+    autoTable(doc, {
+      head: [headers],
+      body: rows,
+      startY: 40,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [37, 99, 235], textColor: 255 },
+      alternateRowStyles: { fillColor: [241, 245, 249] },
+      margin: { top: 40 },
+    });
+
+    const dateStr = new Date().toISOString().slice(0, 10);
+    doc.save(`${filename}_${dateStr}.pdf`);
+
+    notify(`Exported ${data.length} records to PDF`, 'success');
+  } catch (err) {
+    console.error('PDF export failed:', err);
+    notify('PDF export failed', 'error');
+  }
+};
+
+export const exportToExcel = (data, filename, sheetName = 'Sheet1') => {
+  if (!data || data.length === 0) {
+    notify('No data to export!', 'error');
+    return;
+  }
+
+  try {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    XLSX.writeFile(wb, `${filename}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+    notify(`Exported ${data.length} records to Excel`, 'success');
+  } catch (err) {
+    console.error('Excel export failed:', err);
+    notify('Excel export failed', 'error');
+  }
+};
+
+export const prepareChartExportData = (chartData, chartType) => {
+  switch (chartType) {
+    case 'costBreakdown':
+      return chartData.map((d) => ({
+        Category: d.name,
+        Amount: d.value,
+        'Share (%)': d.percent ? d.percent.toFixed(1) : '0.0',
+      }));
+    case 'driverComparison':
+      return chartData.map((d) => ({
+        Driver: d.name,
+        'Total Trips': d.totalTrips,
+        'Completed Trips': d.completedTrips,
+        'Completion Rate (%)':
+          d.totalTrips > 0
+            ? ((d.completedTrips / d.totalTrips) * 100).toFixed(1)
+            : '0.0',
+      }));
+    case 'fleetUtilization':
+      return chartData.map((d) => ({
+        Date: d.displayDate,
+        'Utilization (%)': d.utilization,
+        'Availability (%)': d.available,
+      }));
+    case 'tripHeatmap':
+      return chartData.map((d) => ({
+        Day: d.day,
+        Hour: d.hour,
+        Trips: d.count,
+        Intensity: d.intensity,
+      }));
+    default:
+      return chartData;
   }
 };
