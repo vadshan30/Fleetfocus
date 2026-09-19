@@ -15,6 +15,7 @@ import Icon from '../ui/Icon';
 // Analytics Components
 import FleetUtilizationChart from '../analytics/FleetUtilizationChart';
 import DriverComparisonChart from '../analytics/DriverComparisonChart';
+import CostBreakdownChart from '../analytics/CostBreakdownChart';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -362,6 +363,9 @@ const Dashboard = () => {
 
       {/* DRIVER COMPARISON CHART */}
       <DriverComparisonChart drivers={drivers} trips={trips} />
+
+      {/* COST BREAKDOWN CHART */}
+      <CostBreakdownChart trips={trips} maintenanceLogs={maintenanceLogs} />
 
       {/* DRIVER PERFORMANCE COMPONENT */}
       <DriverPerformance trips={trips} drivers={drivers} />
