@@ -1,14 +1,71 @@
+# ============================================
+# FRONTEND - Node/React
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/build/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # ============================================
-# SPRING BOOT - SENSITIVE CONFIG
+# BACKEND - Java/Spring Boot/Maven
+# ============================================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# ============================================
+# SENSITIVE CONFIG - NEVER COMMIT
 # ============================================
 application.properties
 application-*.properties
 !application.properties.example
 *.env
-.env
-.env.local
-.env.production
-.env.development
 secrets/
 credentials.json
+
+# ============================================
+# IDE
+# ============================================
+.idea/
+*.iml
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+*.swp
+*.swo
+
+# ============================================
+# OS FILES
+# ============================================
+.DS_Store
+Thumbs.db
+*.bak
+*~
+
+# ============================================
+# LOGS
+# ============================================
+logs/
+
+# ============================================
+# BUILD
+# ============================================
+dist/
+build/
+
+# ============================================
+# COVERAGE
+# ============================================
+coverage/
+.nyc_output/
