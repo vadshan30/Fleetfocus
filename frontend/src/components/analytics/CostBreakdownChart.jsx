@@ -4,7 +4,6 @@ import {
   Pie,
   Cell,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 import Icon from '../ui/Icon';
@@ -17,7 +16,7 @@ const CATEGORIES = [
 ];
 
 const SkeletonPie = () => (
-  <div className="flex items-center justify-center h-[300px] animate-pulse">
+  <div className="flex items-center justify-center h-[260px] animate-pulse">
     <div className="relative w-48 h-48">
       <div className="absolute inset-0 border-4 border-slate-200 dark:border-slate-700 rounded-full" />
       <div className="absolute inset-0 border-4 border-slate-300 dark:border-slate-600 rounded-full border-t-transparent animate-spin" />
@@ -57,7 +56,7 @@ const CostBreakdownChart = ({
   tripCostPerKm = 0.15,
   otherCosts = 0,
   title = 'Cost Breakdown',
-  height = 300,
+  height = 260,
   isLoading = false,
 }) => {
   const chartData = useMemo(() => {
@@ -168,23 +167,6 @@ const CostBreakdownChart = ({
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend
-                wrapperStyle={{ paddingTop: 10 }}
-                formatter={(value) => {
-                  const entry = chartData.find((d) => d.name === value);
-                  const amount = entry ? entry.value : 0;
-                  return (
-                    <span className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry?.color }} />
-                      {value}: ${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  );
-                }}
-                iconType="circle"
-                iconSize={8}
-                layout="vertical"
-                align="left"
-              />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -192,7 +174,7 @@ const CostBreakdownChart = ({
 
       <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
         {chartData.map((entry) => (
-          <div key={entry.name} className="flex items-center gap-2">
+          <div key={entry.name} className="flex items-center gap-2 justify-center">
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
             <span className="text-slate-500 dark:text-slate-400">{entry.name}</span>
             <span className="font-semibold text-slate-900 dark:text-slate-100 ml-auto">${Number(entry.value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
