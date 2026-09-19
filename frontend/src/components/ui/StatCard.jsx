@@ -27,8 +27,8 @@ const StatCard = ({
   label = 'Total Stat',
   value = '0',
   subtext = '',
-  trend = null, // e.g. { value: '+12%', positive: true } or string "+12%"
-  progress = null, // e.g. 75 or { percent: 75, color: 'blue' }
+  trend = null,
+  progress = null,
   className = '',
 }) => {
   const iconStyle = iconBgVariants[iconColor] || iconBgVariants.blue;
@@ -37,20 +37,29 @@ const StatCard = ({
 
   const renderTrend = () => {
     if (!trend) return null;
-    const isObj = typeof trend === 'object';
-    const trendVal = isObj ? trend.value : trend;
-    const isPositive = isObj ? trend.positive !== false : !trendVal.startsWith('-');
+    const { value: trendValue, direction = 'neutral' } = trend;
+
+    const trendConfig = {
+      up: {
+        color: 'text-emerald-600 dark:text-emerald-400',
+        icon: 'ArrowUpRight',
+      },
+      down: {
+        color: 'text-rose-600 dark:text-rose-400',
+        icon: 'ArrowDownRight',
+      },
+      neutral: {
+        color: 'text-slate-500 dark:text-slate-400',
+        icon: 'ArrowRight',
+      },
+    };
+
+    const config = trendConfig[direction] || trendConfig.neutral;
 
     return (
-      <span
-        className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-          isPositive
-            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-            : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
-        }`}
-      >
-        <Icon name={isPositive ? 'TrendingUp' : 'TrendingDown'} size={12} />
-        {trendVal}
+      <span className={`inline-flex items-center gap-1 text-[12px] font-semibold tabular-nums ${config.color}`}>
+        <Icon name={config.icon} size={12} />
+        {trendValue}
       </span>
     );
   };
@@ -70,7 +79,7 @@ const StatCard = ({
         </div>
 
         <div className="flex items-baseline gap-2.5 mt-1">
-          <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+          <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 tabular-nums">
             {value}
           </span>
           {renderTrend()}

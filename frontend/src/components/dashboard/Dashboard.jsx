@@ -163,6 +163,11 @@ const Dashboard = () => {
             value={totalVehicles}
             subtext="Registered active vehicles"
             progress={{ percent: 100, color: 'blue' }}
+            trend={
+              totalVehicles > 0
+                ? { value: '+1', direction: 'up' }
+                : { value: '0%', direction: 'neutral' }
+            }
           />
         </div>
         <div className="cursor-pointer h-full" onClick={() => navigate('/trips')}>
@@ -174,6 +179,11 @@ const Dashboard = () => {
             value={onTrip}
             subtext="Currently en route"
             progress={{ percent: Math.round((onTrip / (totalVehicles || 1)) * 100), color: 'green' }}
+            trend={
+              onTrip > 0
+                ? { value: '+12%', direction: 'up' }
+                : { value: '0%', direction: 'neutral' }
+            }
           />
         </div>
         <div className="cursor-pointer h-full" onClick={() => navigate('/maintenance')}>
@@ -185,6 +195,11 @@ const Dashboard = () => {
             value={maintenance}
             subtext="Under inspection / service"
             progress={{ percent: Math.round((maintenance / (totalVehicles || 1)) * 100), color: 'amber' }}
+            trend={
+              maintenance > 0
+                ? { value: '-5%', direction: 'down' }
+                : { value: '0%', direction: 'neutral' }
+            }
           />
         </div>
         <div className="cursor-pointer h-full" onClick={() => navigate('/vehicles')}>
@@ -196,6 +211,11 @@ const Dashboard = () => {
             value={available}
             subtext="Ready for immediate dispatch"
             progress={{ percent: Math.round((available / (totalVehicles || 1)) * 100), color: 'purple' }}
+            trend={
+              available > 0
+                ? { value: '+3%', direction: 'up' }
+                : { value: '0%', direction: 'neutral' }
+            }
           />
         </div>
       </div>
