@@ -18,6 +18,7 @@ import TripList from './components/trips/TripList';
 import MaintenanceList from './components/maintenance/MaintenanceList';
 import LiveFleet from './components/dashboard/LiveFleet';
 import LiveFleetPage from './components/live/LiveFleetPage';
+import AlertCenterPage from './components/alerts/AlertCenterPage';
 
 import './App.css';
 

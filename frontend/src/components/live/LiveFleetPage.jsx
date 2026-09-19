@@ -1,15 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import 'leaflet/dist/leaflet.css';
 import websocketService from '../../services/websocketService';
+import geofenceService from '../../services/geofenceService';
 import LiveFleetMap from './LiveFleetMap';
 import LiveTelemetryPanel from './LiveTelemetryPanel';
 import AlertFeed from './AlertFeed';
+import GeofenceList from '../geofence/GeofenceList';
+import GeofenceDrawer from '../geofence/GeofenceDrawer';
+import Icon from '../ui/Icon';
 
 const LiveFleetPage = () => {
   const [vehicles, setVehicles] = useState([]);
+  const [geofences, setGeofences] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [wsStatus, setWsStatus] = useState('connecting');
   const [isDark, setIsDark] = useState(false);
+  const [showGeofences, setShowGeofences] = useState(true);
+  const [showGeofenceList, setShowGeofenceList] = useState(true);
+  const [selectedGeofenceId, setSelectedGeofenceId] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [pickMode, setPickMode] = useState(false);
+  const [pendingGeofenceData, setPendingGeofenceData] = useState(null);
+  const [editingGeofence, setEditingGeofence] = useState(null);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -18,6 +30,19 @@ const LiveFleetPage = () => {
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
+
+  const fetchGeofences = useCallback(async () => {
+    try {
+      const data = await geofenceService.getActive();
+      setGeofences(data || []);
+    } catch (err) {
+      console.error('Failed to fetch geofences:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGeofences();
+  }, [fetchGeofences]);
 
   useEffect(() => {
     const unsubscribeStatus = websocketService.onStatusChange(setWsStatus);
@@ -54,6 +79,93 @@ const LiveFleetPage = () => {
     setAlerts((prev) => prev.filter((a) => a.id !== id));
   }, []);
 
+  const handleResolve = useCallback((id) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+  }, []);
+
+  const handleGeofenceSelect = useCallback((geofence) => {
+    setSelectedGeofenceId(geofence.id);
+  }, []);
+
+  const handleAddGeofence = useCallback(() => {
+    setEditingGeofence(null);
+    setPendingGeofenceData({
+      name: '',
+      description: '',
+      type: 'DEPOT',
+      color: '#3b82f6',
+      radiusMeters: 500,
+      centerLat: null,
+      centerLng: null,
+      active: true,
+    });
+    setIsDrawerOpen(true);
+  }, []);
+
+  const handleEditGeofence = useCallback((geofence) => {
+    setEditingGeofence(geofence);
+    setPendingGeofenceData({
+      name: geofence.name,
+      description: geofence.description,
+      type: geofence.type,
+      color: geofence.color || '#3b82f6',
+      radiusMeters: geofence.radiusMeters,
+      centerLat: geofence.centerLat,
+      centerLng: geofence.centerLng,
+      active: geofence.active,
+    });
+    setIsDrawerOpen(true);
+  }, []);
+
+  const handlePickFromMap = useCallback(() => {
+    setPickMode(true);
+  }, []);
+
+  const handlePickCoordinates = useCallback((lat, lng) => {
+    setPendingGeofenceData((prev) =>
+      prev ? { ...prev, centerLat: lat, centerLng: lng } : null
+    );
+    setPickMode(false);
+  }, []);
+
+  const handleSaveGeofence = useCallback(async (formData) => {
+    try {
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        type: formData.type,
+        color: formData.color,
+        radiusMeters: parseFloat(formData.radiusMeters),
+        centerLat: parseFloat(formData.centerLat),
+        centerLng: parseFloat(formData.centerLng),
+        active: formData.active,
+      };
+
+      if (editingGeofence?.id) {
+        await geofenceService.update(editingGeofence.id, payload);
+      } else {
+        await geofenceService.create(payload);
+      }
+
+      fetchGeofences();
+    } catch (err) {
+      console.error('Failed to save geofence:', err);
+      throw err;
+    } finally {
+      setIsDrawerOpen(false);
+      setPickMode(false);
+      setPendingGeofenceData(null);
+      setEditingGeofence(null);
+    }
+  }, [editingGeofence, geofenceService, fetchGeofences]);
+
+  const handleDrawerClose = useCallback(() => {
+    setIsDrawerOpen(false);
+    setPickMode(false);
+    setPendingGeofenceData(null);
+    setEditingGeofence(null);
+  }, []);
+
   const statusConfig = {
     connected: { label: 'Connected', color: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
     connecting: { label: 'Reconnecting…', color: 'bg-amber-500', text: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/50' },
@@ -61,6 +173,20 @@ const LiveFleetPage = () => {
   };
 
   const currentStatus = statusConfig[wsStatus] || statusConfig.disconnected;
+
+  const toggleGeofenceList = () => setShowGeofenceList(!showGeofenceList);
+  const toggleGeofences = () => setShowGeofences(!showGeofences);
+
+  const drawerData = pendingGeofenceData || {
+    name: '',
+    description: '',
+    type: 'DEPOT',
+    color: '#3b82f6',
+    radiusMeters: 500,
+    centerLat: '',
+    centerLng: '',
+    active: true,
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -88,6 +214,13 @@ const LiveFleetPage = () => {
                 <span className={`relative flex h-1.5 w-1.5 rounded-full ${currentStatus.color}`} />
                 {currentStatus.label}
               </span>
+              <button
+                onClick={toggleGeofenceList}
+                className={`p-2 rounded-lg border transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 ${showGeofenceList ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800' : 'border-slate-200 dark:border-slate-700'}`}
+                title={showGeofenceList ? 'Hide geofence list' : 'Show geofence list'}
+              >
+                <Icon name="Layers" size={20} className="text-slate-600 dark:text-slate-400" />
+              </button>
             </div>
           </div>
         </div>
@@ -96,10 +229,34 @@ const LiveFleetPage = () => {
       {/* MAIN LAYOUT */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid lg:grid-cols-12 gap-6 h-[calc(100vh-280px)] min-h-[600px]">
-          {/* MAP - 70% (8/12 cols on lg+) */}
-          <div className="lg:col-span-8 h-full">
+          {/* GEOFENCE LIST SIDEBAR - 15% (2/12 cols on lg+) */}
+          {showGeofenceList && (
+            <div className="lg:col-span-2 h-full hidden lg:block">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm h-full">
+                <GeofenceList
+                  onSelectGeofence={handleGeofenceSelect}
+                  onEditGeofence={handleEditGeofence}
+                  isDark={isDark}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* MAP - 70% (8/12 cols on lg+) or 85% (10/12 cols) when sidebar hidden */}
+          <div className={`lg:col-span-${showGeofenceList ? 8 : 10} h-full transition-all duration-300`}>
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm h-full">
-              <LiveFleetMap vehicles={vehicles} isDark={isDark} />
+              <LiveFleetMap
+                vehicles={vehicles}
+                geofences={geofences}
+                isDark={isDark}
+                showGeofences={showGeofences}
+                onToggleGeofences={toggleGeofences}
+                onAddGeofence={handleAddGeofence}
+                onSelectGeofence={handleGeofenceSelect}
+                selectedGeofenceId={selectedGeofenceId}
+                pickMode={pickMode}
+                onPickCoordinates={handlePickCoordinates}
+              />
             </div>
           </div>
 
@@ -113,7 +270,22 @@ const LiveFleetPage = () => {
       </main>
 
       {/* ALERT FEED OVERLAY */}
-      <AlertFeed alerts={alerts} onAcknowledge={handleAcknowledge} isDark={isDark} />
+      <AlertFeed
+        alerts={alerts}
+        onAcknowledge={handleAcknowledge}
+        onResolve={handleResolve}
+        isDark={isDark}
+      />
+
+      {/* GEOFENCE DRAWER - rendered at root level, NOT inside MapContainer */}
+      <GeofenceDrawer
+        isOpen={isDrawerOpen}
+        onClose={handleDrawerClose}
+        onSave={handleSaveGeofence}
+        onPickFromMap={handlePickFromMap}
+        initialData={editingGeofence || pendingGeofenceData}
+        isDark={isDark}
+      />
     </div>
   );
 };

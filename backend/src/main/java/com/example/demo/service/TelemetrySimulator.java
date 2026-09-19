@@ -24,6 +24,9 @@ public class TelemetrySimulator {
     @Autowired
     private TelemetryDataRepository telemetryDataRepository;
 
+    @Autowired
+    private GeofenceService geofenceService;
+
     private final Random random = new Random();
 
     @Scheduled(fixedRate = 5000)
@@ -68,6 +71,9 @@ public class TelemetrySimulator {
             telemetry.setRecordedAt(LocalDateTime.now());
             
             telemetryDataRepository.save(telemetry);
+            
+            // Evaluate geofences for this telemetry
+            geofenceService.evaluateGeofences(telemetry);
         }
         
         System.out.println("✅ Telemetry generated for " + vehicles.size() + " vehicles");
