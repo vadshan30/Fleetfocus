@@ -12,6 +12,9 @@ import StatCard from '../ui/StatCard';
 import StatusBadge from '../ui/StatusBadge';
 import Icon from '../ui/Icon';
 
+// Analytics Components
+import FleetUtilizationChart from '../analytics/FleetUtilizationChart';
+
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -352,6 +355,9 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {/* FLEET UTILIZATION CHART */}
+      <FleetUtilizationChart />
 
       {/* DRIVER PERFORMANCE COMPONENT */}
       <DriverPerformance trips={trips} drivers={drivers} />
