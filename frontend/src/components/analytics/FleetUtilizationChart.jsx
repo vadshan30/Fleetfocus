@@ -48,40 +48,45 @@ const generateMockData = (days) => {
 
 const FULL_MOCK_DATA = generateMockData(90);
 
-const FleetUtilizationChart = ({ data: propData, title = 'Fleet Utilization', height = 300 }) => {
+// ✅ Moved OUTSIDE the component
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload) return null;
+
+  return (
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-3 min-w-[140px]">
+      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">{label}</p>
+      {payload.map((entry, index) => (
+        <div key={index} className="flex items-center gap-2 text-sm">
+          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="text-slate-700 dark:text-slate-200 capitalize">{entry.name}: </span>
+          <span className="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
+            {entry.value}%
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const FleetUtilizationChart = ({
+  data: propData,
+  title = 'Fleet Utilization',
+  height = 300,
+}) => {
   const [dateRange, setDateRange] = useState('30d');
+  const isMock = !propData;
 
   const chartData = useMemo(() => {
     const sourceData = propData || FULL_MOCK_DATA;
     const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
-    return sourceData.slice(-days);
+    // defensive sort by date ascending
+    const sorted = [...sourceData].sort((a, b) =>
+      String(a.date).localeCompare(String(b.date))
+    );
+    return sorted.slice(-days);
   }, [propData, dateRange]);
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (!active || !payload) return null;
-
-    return (
-      <div
-        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-3 min-w-[140px]"
-      >
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">{label}</p>
-        {payload.map((entry, index) => (
-          <div key={index} className="flex items-center gap-2 text-sm">
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-slate-700 dark:text-slate-200 capitalize">
-              {entry.name}:{' '}
-            </span>
-            <span className="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
-              {entry.value}%
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  const chartHeight = typeof height === 'number' ? `${height}px` : height;
 
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
@@ -91,8 +96,13 @@ const FleetUtilizationChart = ({ data: propData, title = 'Fleet Utilization', he
             <Icon name="TrendingUp" size={18} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
               {title}
+              {isMock && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  Demo Data
+                </span>
+              )}
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
               Fleet utilization vs availability over time
@@ -112,7 +122,7 @@ const FleetUtilizationChart = ({ data: propData, title = 'Fleet Utilization', he
         </select>
       </div>
 
-      <div className="h-[300px]" style={{ height: typeof height === 'number' ? `${height}px` : height }}>
+      <div style={{ height: chartHeight }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
             <CartesianGrid
@@ -127,6 +137,7 @@ const FleetUtilizationChart = ({ data: propData, title = 'Fleet Utilization', he
               axisLine={false}
               tickLine={false}
               interval="preserveStartEnd"
+              minTickGap={24}
               dy={5}
             />
             <YAxis
@@ -141,7 +152,9 @@ const FleetUtilizationChart = ({ data: propData, title = 'Fleet Utilization', he
             <Legend
               wrapperStyle={{ paddingTop: 10 }}
               formatter={(value) => (
-                <span className="capitalize text-xs font-medium text-slate-700 dark:text-slate-300">{value}</span>
+                <span className="capitalize text-xs font-medium text-slate-700 dark:text-slate-300">
+                  {value}
+                </span>
               )}
               iconType="circle"
               iconSize={8}
