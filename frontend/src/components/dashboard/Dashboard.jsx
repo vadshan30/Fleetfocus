@@ -170,7 +170,7 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <button
-              onClick={() => navigate('/live')}
+              onClick={() => navigate('/live-fleet')}
               className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2"
             >
               <Icon name="Radio" size={16} />

@@ -17,6 +17,7 @@ import DriverList from './components/drivers/DriverList';
 import TripList from './components/trips/TripList';
 import MaintenanceList from './components/maintenance/MaintenanceList';
 import LiveFleet from './components/dashboard/LiveFleet';
+import LiveFleetPage from './components/live/LiveFleetPage';
 
 import './App.css';
 
@@ -81,6 +82,7 @@ function App() {
             <Route path="/trips" element={<ProtectedRoute><TripList /></ProtectedRoute>} />
             <Route path="/maintenance" element={<ProtectedRoute><MaintenanceList /></ProtectedRoute>} />
             <Route path="/live" element={<ProtectedRoute><LiveFleet /></ProtectedRoute>} />
+            <Route path="/live-fleet" element={<ProtectedRoute><LiveFleetPage /></ProtectedRoute>} />
             <Route path="/login" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
