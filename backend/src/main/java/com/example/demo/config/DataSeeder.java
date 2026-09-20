@@ -32,6 +32,9 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     private MaintenanceLogRepository maintenanceLogRepository;
 
+    @Autowired
+    private AlertRuleRepository alertRuleRepository;
+
     @Override
     public void run(String... args) throws Exception {
         seedUsers();
@@ -39,6 +42,7 @@ public class DataSeeder implements CommandLineRunner {
         seedDrivers();
         seedTrips();
         seedMaintenanceLogs();
+        seedAlertRules();
     }
 
     private void seedUsers() {
@@ -140,6 +144,42 @@ public class DataSeeder implements CommandLineRunner {
                 maintenanceLogRepository.save(log);
                 System.out.println("✅ Maintenance log seeded successfully!");
             }
+        }
+    }
+
+    private void seedAlertRules() {
+        if (alertRuleRepository.count() == 0) {
+            AlertRule speedRule = new AlertRule(
+                    "High Speed Alert",
+                    AlertMetric.SPEED,
+                    AlertOperator.GREATER_THAN,
+                    90.0,
+                    AlertSeverity.WARNING
+            );
+            speedRule.setDescription("Triggers when vehicle speed exceeds 90 km/h");
+            alertRuleRepository.save(speedRule);
+
+            AlertRule fuelRule = new AlertRule(
+                    "Low Fuel Alert",
+                    AlertMetric.FUEL_LEVEL,
+                    AlertOperator.LESS_THAN,
+                    15.0,
+                    AlertSeverity.CRITICAL
+            );
+            fuelRule.setDescription("Triggers when fuel level drops below 15%");
+            alertRuleRepository.save(fuelRule);
+
+            AlertRule tempRule = new AlertRule(
+                    "Overheating Alert",
+                    AlertMetric.ENGINE_TEMP,
+                    AlertOperator.GREATER_THAN,
+                    100.0,
+                    AlertSeverity.CRITICAL
+            );
+            tempRule.setDescription("Triggers when engine temperature exceeds 100°C");
+            alertRuleRepository.save(tempRule);
+
+            System.out.println("✅ 3 default alert rules seeded successfully!");
         }
     }
 }

@@ -14,6 +14,7 @@ const AlertCenterPage = () => {
   const [filters, setFilters] = useState({
     severity: 'ALL',
     status: 'ALL',
+    alertType: 'ALL',
     startDate: '',
     endDate: '',
   });
@@ -29,6 +30,7 @@ const AlertCenterPage = () => {
     try {
       const params = { page, size };
       if (filters.severity !== 'ALL') params.severity = filters.severity;
+      if (filters.alertType !== 'ALL') params.alertType = filters.alertType;
       if (filters.status === 'UNACKNOWLEDGED') params.acknowledged = false;
       else if (filters.status === 'ACKNOWLEDGED') params.acknowledged = true;
       if (filters.status === 'RESOLVED') params.resolved = true;
@@ -93,6 +95,13 @@ const AlertCenterPage = () => {
     { value: 'INFO', label: 'Info' },
   ];
 
+  const alertTypeOptions = [
+    { value: 'ALL', label: 'All Types' },
+    { value: 'RULE_BREACH', label: 'Rule Breach' },
+    { value: 'GEOFENCE_ENTER', label: 'Geofence Enter' },
+    { value: 'GEOFENCE_EXIT', label: 'Geofence Exit' },
+  ];
+
   const statusOptions = [
     { value: 'ALL', label: 'All Statuses' },
     { value: 'UNACKNOWLEDGED', label: 'Unacknowledged' },
@@ -106,6 +115,9 @@ const AlertCenterPage = () => {
     { label: 'Warning', value: stats.warning, color: 'amber', icon: 'AlertTriangle' },
     { label: 'Info', value: stats.info, color: 'blue', icon: 'Info' },
     { label: 'Unacknowledged', value: stats.unacknowledged, color: 'purple', icon: 'Bell' },
+    { label: 'Rule Breach', value: stats.ruleBreach, color: 'purple', icon: 'AlertTriangle' },
+    { label: 'Geofence Enter', value: stats.geofenceEnter, color: 'emerald', icon: 'LogIn' },
+    { label: 'Geofence Exit', value: stats.geofenceExit, color: 'blue', icon: 'LogOut' },
   ];
 
   const columns = [
@@ -131,21 +143,55 @@ const AlertCenterPage = () => {
       ),
     },
     {
-      header: 'Geofence',
-      accessor: 'geofenceId',
-      render: (row) => (
-        <div>
-          <div className="font-medium text-sm text-slate-700 dark:text-slate-300">
-            {row.geofenceName || 'N/A'}
-          </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">ID: {row.geofenceId}</div>
-        </div>
-      ),
+      header: 'Type',
+      accessor: 'alertType',
+      render: (row) => {
+        const type = row.alertType;
+        if (type === 'RULE_BREACH') {
+          return (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400">
+              <Icon name="AlertTriangle" size={10} />
+              Rule Breach
+            </span>
+          );
+        }
+        if (type === 'GEOFENCE_ENTER') {
+          return (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
+              <Icon name="LogIn" size={10} />
+              Geofence Enter
+            </span>
+          );
+        }
+        if (type === 'GEOFENCE_EXIT') {
+          return (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400">
+              <Icon name="LogOut" size={10} />
+              Geofence Exit
+            </span>
+          );
+        }
+        return <span className="text-xs text-slate-500 dark:text-slate-400">{type || '—'}</span>;
+      },
     },
     {
       header: 'Event',
       accessor: 'eventType',
       render: (row) => {
+        if (row.alertType === 'RULE_BREACH') {
+          return (
+            <div>
+              <div className="font-medium text-sm text-slate-700 dark:text-slate-300">
+                {row.ruleName || 'Rule Breach'}
+              </div>
+              {row.metric && (
+                <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                  {row.metric}: {row.actualValue} vs {row.thresholdValue}
+                </div>
+              )}
+            </div>
+          );
+        }
         const isEnter = row.eventType === 'ENTER';
         return (
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -258,6 +304,13 @@ const AlertCenterPage = () => {
                   className="px-3 py-2 rounded-lg border ${inputBorder} ${inputBg} ${textColor} focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {severityOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+                <select
+                  value={filters.alertType}
+                  onChange={(e) => handleFilterChange('alertType', e.target.value)}
+                  className="px-3 py-2 rounded-lg border ${inputBorder} ${inputBg} ${textColor} focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {alertTypeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                 </select>
                 <select
                   value={filters.status}

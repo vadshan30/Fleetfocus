@@ -1,11 +1,12 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.Geofence;
-import com.example.demo.entity.GeofenceAlert;
-import com.example.demo.entity.GeofenceEventType;
+import com.example.demo.entity.AlertHistory;
 import com.example.demo.entity.AlertSeverity;
+import com.example.demo.entity.AlertType;
+import com.example.demo.entity.Geofence;
+import com.example.demo.entity.GeofenceEventType;
 import com.example.demo.entity.TelemetryData;
-import com.example.demo.repository.GeofenceAlertRepository;
+import com.example.demo.repository.AlertHistoryRepository;
 import com.example.demo.repository.GeofenceRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GeofenceService {
 
     private final GeofenceRepository geofenceRepository;
-    private final GeofenceAlertRepository geofenceAlertRepository;
+    private final AlertHistoryRepository alertHistoryRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     private final Map<Long, Set<Long>> vehicleInsideGeofences = new ConcurrentHashMap<>();
@@ -32,10 +33,10 @@ public class GeofenceService {
     private static final double EARTH_RADIUS_METERS = 6371000;
 
     public GeofenceService(GeofenceRepository geofenceRepository,
-                           GeofenceAlertRepository geofenceAlertRepository,
+                           AlertHistoryRepository alertHistoryRepository,
                            SimpMessagingTemplate messagingTemplate) {
         this.geofenceRepository = geofenceRepository;
-        this.geofenceAlertRepository = geofenceAlertRepository;
+        this.alertHistoryRepository = alertHistoryRepository;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -126,8 +127,11 @@ public class GeofenceService {
                 eventType == GeofenceEventType.ENTER ? "entered" : "exited",
                 geofence.getName());
 
-        GeofenceAlert alert = new GeofenceAlert(vehicleId, geofence.getId(), eventType, AlertSeverity.INFO, message);
-        geofenceAlertRepository.save(alert);
+        AlertHistory history = new AlertHistory(vehicleId, AlertType.GEOFENCE_ENTER, AlertSeverity.INFO, message);
+        history.setGeofenceId(geofence.getId());
+        history.setGeofenceName(geofence.getName());
+        history.setAlertType(eventType == GeofenceEventType.ENTER ? AlertType.GEOFENCE_ENTER : AlertType.GEOFENCE_EXIT);
+        alertHistoryRepository.save(history);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("type", "GEOFENCE_" + eventType.name());

@@ -27,6 +27,9 @@ public class TelemetrySimulator {
     @Autowired
     private GeofenceService geofenceService;
 
+    @Autowired
+    private AlertRuleService alertRuleService;
+
     private final Random random = new Random();
 
     @Scheduled(fixedRate = 5000)
@@ -74,6 +77,11 @@ public class TelemetrySimulator {
             
             // Evaluate geofences for this telemetry
             geofenceService.evaluateGeofences(telemetry);
+            
+            // Evaluate alert rules for this telemetry
+            alertRuleService.evaluate(telemetry)
+                    .ifPresent(rule -> alertRuleService.broadcastAlert(telemetry, rule,
+                            alertRuleService.buildMessage(telemetry, rule)));
         }
         
         System.out.println("✅ Telemetry generated for " + vehicles.size() + " vehicles");

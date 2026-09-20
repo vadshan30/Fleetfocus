@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { logout } from '../../store/slices/authSlice';
 import alertService from '../../services/alertService';
 import DarkModeToggle from '../common/DarkModeToggle';
-import Icon from '../ui/Icon';
 
 const Navbar = () => {
   const user = useSelector((state) => state.auth.user);
@@ -12,16 +11,13 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [unacknowledgedCount, setUnacknowledgedCount] = useState(0);
 
-  if (!user) {
-    return null;
-  }
-
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
   };
 
   useEffect(() => {
+    if (!user) return;
     const fetchStats = async () => {
       try {
         const stats = await alertService.getStats();
@@ -34,7 +30,11 @@ const Navbar = () => {
     fetchStats();
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <nav className="navbar">
@@ -56,6 +56,11 @@ const Navbar = () => {
             </span>
           )}
         </Link>
+        {(user.role === 'FLEET_MANAGER' || user.role === 'DISPATCHER') && (
+          <Link to="/settings/alerts" className="relative">
+            Alert Rules
+          </Link>
+        )}
       </div>
       <div className="nav-user">
         <DarkModeToggle />

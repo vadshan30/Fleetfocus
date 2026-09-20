@@ -1,8 +1,9 @@
 package com.example.demo.controller;
 
+import com.example.demo.entity.AlertHistory;
 import com.example.demo.entity.AlertSeverity;
-import com.example.demo.entity.GeofenceAlert;
-import com.example.demo.repository.GeofenceAlertRepository;
+import com.example.demo.entity.AlertType;
+import com.example.demo.repository.AlertHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,19 +25,24 @@ import java.util.Optional;
 public class AlertController {
 
     @Autowired
-    private GeofenceAlertRepository alertRepository;
+    private AlertHistoryRepository alertRepository;
 
     @GetMapping
-    public ResponseEntity<Page<GeofenceAlert>> getAlerts(
+    public ResponseEntity<Page<AlertHistory>> getAlerts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Boolean acknowledged,
             @RequestParam(required = false) AlertSeverity severity,
+            @RequestParam(required = false) AlertType alertType,
             @RequestParam(required = false) Boolean resolved,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "occurredAt"));
+
+        if (alertType != null) {
+            return ResponseEntity.ok(alertRepository.findByAlertTypeOrderByOccurredAtDesc(alertType, pageable));
+        }
 
         if (acknowledged != null) {
             return ResponseEntity.ok(alertRepository.findByAcknowledgedOrderByOccurredAtDesc(acknowledged, pageable));
@@ -54,19 +60,19 @@ public class AlertController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<GeofenceAlert> getAlert(@PathVariable Long id) {
-        Optional<GeofenceAlert> alert = alertRepository.findById(id);
+    public ResponseEntity<AlertHistory> getAlert(@PathVariable Long id) {
+        Optional<AlertHistory> alert = alertRepository.findById(id);
         return alert.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/{id}/acknowledge")
-    public ResponseEntity<GeofenceAlert> acknowledgeAlert(@PathVariable Long id, Authentication auth) {
-        Optional<GeofenceAlert> optionalAlert = alertRepository.findById(id);
+    public ResponseEntity<AlertHistory> acknowledgeAlert(@PathVariable Long id, Authentication auth) {
+        Optional<AlertHistory> optionalAlert = alertRepository.findById(id);
         if (optionalAlert.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        GeofenceAlert alert = optionalAlert.get();
+        AlertHistory alert = optionalAlert.get();
         alert.setAcknowledged(true);
         alert.setAcknowledgedAt(LocalDateTime.now());
         alert.setAcknowledgedBy(auth.getName());
@@ -75,13 +81,13 @@ public class AlertController {
     }
 
     @PatchMapping("/{id}/resolve")
-    public ResponseEntity<GeofenceAlert> resolveAlert(@PathVariable Long id) {
-        Optional<GeofenceAlert> optionalAlert = alertRepository.findById(id);
+    public ResponseEntity<AlertHistory> resolveAlert(@PathVariable Long id) {
+        Optional<AlertHistory> optionalAlert = alertRepository.findById(id);
         if (optionalAlert.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        GeofenceAlert alert = optionalAlert.get();
+        AlertHistory alert = optionalAlert.get();
         alert.setResolved(true);
 
         return ResponseEntity.ok(alertRepository.save(alert));
@@ -94,6 +100,9 @@ public class AlertController {
         stats.put("critical", alertRepository.countBySeverityAndAcknowledgedFalse(AlertSeverity.CRITICAL));
         stats.put("warning", alertRepository.countBySeverityAndAcknowledgedFalse(AlertSeverity.WARNING));
         stats.put("info", alertRepository.countBySeverityAndAcknowledgedFalse(AlertSeverity.INFO));
+        stats.put("ruleBreach", alertRepository.countByAlertTypeAndAcknowledgedFalse(AlertType.RULE_BREACH));
+        stats.put("geofenceEnter", alertRepository.countByAlertTypeAndAcknowledgedFalse(AlertType.GEOFENCE_ENTER));
+        stats.put("geofenceExit", alertRepository.countByAlertTypeAndAcknowledgedFalse(AlertType.GEOFENCE_EXIT));
         return ResponseEntity.ok(stats);
     }
 }

@@ -27,6 +27,9 @@ const TopNavbar = ({ toggleSidebar }) => {
       ? [{ path: '/maintenance', icon: '🔧', label: 'Maintenance' }] 
       : []),
     { path: '/live-fleet', icon: '📡', label: 'Live Fleet' },
+    ...(user.role === 'FLEET_MANAGER' || user.role === 'DISPATCHER' 
+      ? [{ path: '/settings/alerts', icon: '⚙️', label: 'Alert Rules' }] 
+      : []),
   ];
 
   const isActive = (path) => location.pathname === path;

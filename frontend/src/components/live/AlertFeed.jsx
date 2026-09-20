@@ -57,6 +57,22 @@ const AlertItem = ({ alert, onAcknowledge, onResolve, isDark }) => {
     ENGINE_TEMP: 'Thermometer',
     GEOFENCE_ENTER: 'LogIn',
     GEOFENCE_EXIT: 'LogOut',
+    RULE_BREACH: 'AlertTriangle',
+  };
+
+  const getAlertIcon = (alert) => {
+    if (alert.type === 'RULE_BREACH') return 'AlertTriangle';
+    return typeIcons[alert.type] || 'AlertTriangle';
+  };
+
+  const getAlertLabel = (alert) => {
+    if (alert.type === 'RULE_BREACH') {
+      return `${alert.ruleName || 'Rule Breach'}: ${alert.metric || ''}`;
+    }
+    if (alert.type?.startsWith('GEOFENCE_')) {
+      return alert.geofenceName || 'Geofence';
+    }
+    return alert.type;
   };
 
   const handleAck = async () => {
@@ -95,6 +111,12 @@ const AlertItem = ({ alert, onAcknowledge, onResolve, isDark }) => {
 
   const timestamp = alert.timestamp ? new Date(alert.timestamp).toLocaleTimeString() : '--:--:--';
 
+  const badgeColor = alert.type === 'RULE_BREACH'
+    ? (isDark ? 'bg-purple-950/50 text-purple-400 border-purple-800' : 'bg-purple-50 text-purple-700 border-purple-200')
+    : alert.type?.startsWith('GEOFENCE_')
+    ? (isDark ? 'bg-blue-950/50 text-blue-400 border-blue-800' : 'bg-blue-50 text-blue-700 border-blue-200')
+    : (isDark ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-200');
+
   return (
     <div
       className={`flex items-start gap-3 p-3 rounded-xl shadow-lg border min-w-[300px] max-w-[400px] animate-in slide-in-from-right duration-300 ${
@@ -104,11 +126,17 @@ const AlertItem = ({ alert, onAcknowledge, onResolve, isDark }) => {
       aria-live="polite"
     >
       <div className={`flex-shrink-0 mt-0.5 ${colors.icon}`}>
-        <Icon name={typeIcons[alert.type] || 'AlertTriangle'} size={20} />
+        <Icon name={getAlertIcon(alert)} size={20} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className={`text-sm font-medium ${colors.text}`}>{alert.message}</p>
+          <div className="flex items-center gap-2">
+            <p className={`text-sm font-medium ${colors.text}`}>{alert.message}</p>
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border ${badgeColor}`}>
+              <Icon name={getAlertIcon(alert)} size={8} />
+              {getAlertLabel(alert)}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
           <span className="font-mono font-medium text-slate-700 dark:text-slate-300">{alert.licensePlate || 'N/A'}</span>
@@ -116,6 +144,12 @@ const AlertItem = ({ alert, onAcknowledge, onResolve, isDark }) => {
             <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
               <Icon name="MapPin" size={10} />
               {alert.geofenceName}
+            </span>
+          )}
+          {alert.ruleName && alert.type === 'RULE_BREACH' && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400">
+              <Icon name="AlertTriangle" size={10} />
+              {alert.ruleName}
             </span>
           )}
           <span className="flex items-center gap-1">

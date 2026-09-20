@@ -19,6 +19,7 @@ import MaintenanceList from './components/maintenance/MaintenanceList';
 import LiveFleet from './components/dashboard/LiveFleet';
 import LiveFleetPage from './components/live/LiveFleetPage';
 import AlertCenterPage from './components/alerts/AlertCenterPage';
+import AlertRulesPage from './components/settings/AlertRulesPage';
 
 import './App.css';
 
@@ -84,6 +85,8 @@ function App() {
             <Route path="/maintenance" element={<ProtectedRoute><MaintenanceList /></ProtectedRoute>} />
             <Route path="/live" element={<ProtectedRoute><LiveFleet /></ProtectedRoute>} />
             <Route path="/live-fleet" element={<ProtectedRoute><LiveFleetPage /></ProtectedRoute>} />
+            <Route path="/alerts" element={<ProtectedRoute><AlertCenterPage /></ProtectedRoute>} />
+            <Route path="/settings/alerts" element={<ProtectedRoute><AlertRulesPage /></ProtectedRoute>} />
             <Route path="/login" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
