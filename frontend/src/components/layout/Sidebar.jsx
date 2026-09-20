@@ -27,6 +27,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       ? [{ path: '/maintenance', icon: '🔧', label: 'Maintenance' }] 
       : []),
     { path: '/live-fleet', icon: '📡', label: 'Live Fleet' },
+    { path: '/playback', icon: '⏱️', label: 'Playback' },
     ...(user.role === 'FLEET_MANAGER' || user.role === 'DISPATCHER' 
       ? [{ path: '/settings/alerts', icon: '⚙️', label: 'Alert Rules' }] 
       : []),

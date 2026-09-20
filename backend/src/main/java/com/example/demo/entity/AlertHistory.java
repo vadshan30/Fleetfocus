@@ -75,6 +75,11 @@ public class AlertHistory {
         this.message = message;
     }
 
+    public AlertHistory(Long vehicleId, AlertType alertType,
+                         AlertSeverity severity, String message) {
+        this(null, vehicleId, alertType, severity, message);
+    }
+
     public Long getId() {
         return id;
     }

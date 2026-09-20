@@ -2,7 +2,6 @@ package com.example.demo.controller;
 
 import com.example.demo.entity.TelemetryData;
 import com.example.demo.entity.Vehicle;
-import com.example.demo.entity.VehicleStatus;
 import com.example.demo.repository.TelemetryDataRepository;
 import com.example.demo.repository.VehicleRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -10,7 +9,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

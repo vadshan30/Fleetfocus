@@ -2,14 +2,11 @@ package com.example.demo.service;
 
 import com.example.demo.entity.AlertHistory;
 import com.example.demo.entity.AlertMetric;
-import com.example.demo.entity.AlertOperator;
 import com.example.demo.entity.AlertRule;
-import com.example.demo.entity.AlertSeverity;
 import com.example.demo.entity.AlertType;
 import com.example.demo.entity.TelemetryData;
 import com.example.demo.repository.AlertHistoryRepository;
 import com.example.demo.repository.AlertRuleRepository;
-import com.example.demo.repository.VehicleRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +24,6 @@ public class AlertRuleService {
 
     private final AlertRuleRepository alertRuleRepository;
     private final AlertHistoryRepository alertHistoryRepository;
-    private final VehicleRepository vehicleRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     private final Map<String, LocalDateTime> lastAlertTime = new ConcurrentHashMap<>();
@@ -35,11 +31,9 @@ public class AlertRuleService {
 
     public AlertRuleService(AlertRuleRepository alertRuleRepository,
                             AlertHistoryRepository alertHistoryRepository,
-                            VehicleRepository vehicleRepository,
                             SimpMessagingTemplate messagingTemplate) {
         this.alertRuleRepository = alertRuleRepository;
         this.alertHistoryRepository = alertHistoryRepository;
-        this.vehicleRepository = vehicleRepository;
         this.messagingTemplate = messagingTemplate;
     }
 

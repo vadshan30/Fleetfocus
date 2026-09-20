@@ -127,10 +127,10 @@ public class GeofenceService {
                 eventType == GeofenceEventType.ENTER ? "entered" : "exited",
                 geofence.getName());
 
-        AlertHistory history = new AlertHistory(vehicleId, AlertType.GEOFENCE_ENTER, AlertSeverity.INFO, message);
+        AlertType alertType = (eventType == GeofenceEventType.ENTER ? AlertType.GEOFENCE_ENTER : AlertType.GEOFENCE_EXIT);
+        AlertHistory history = new AlertHistory(vehicleId, alertType, AlertSeverity.INFO, message);
         history.setGeofenceId(geofence.getId());
         history.setGeofenceName(geofence.getName());
-        history.setAlertType(eventType == GeofenceEventType.ENTER ? AlertType.GEOFENCE_ENTER : AlertType.GEOFENCE_EXIT);
         alertHistoryRepository.save(history);
 
         Map<String, Object> payload = new HashMap<>();

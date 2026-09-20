@@ -45,6 +45,7 @@ const Navbar = () => {
         <Link to="/drivers">Drivers</Link>
         <Link to="/trips">Trips</Link>
         <Link to="/live-fleet">Live Fleet</Link>
+        <Link to="/playback">Playback</Link>
         {(user.role === 'FLEET_MANAGER' || user.role === 'MAINTENANCE_TECH') && (
           <Link to="/maintenance">Maintenance</Link>
         )}
