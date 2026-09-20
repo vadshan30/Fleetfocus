@@ -1,4 +1,4 @@
-# 🚛 FleetFocus — Real-Time Vehicle Telematics & Fleet Management System
+# FleetFocus — Real-Time Vehicle Telematics & Fleet Management System
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.1.2-brightgreen.svg?style=for-the-badge&logo=springboot)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.2.0-blue.svg?style=for-the-badge&logo=react)](https://reactjs.org/)
@@ -12,7 +12,7 @@ An enterprise-grade Fleet Management System built with **Spring Boot 3** and **R
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Features](#-features)
 - [Screenshots](#-screenshots)
@@ -38,23 +38,23 @@ An enterprise-grade Fleet Management System built with **Spring Boot 3** and **R
 
 ---
 
-## ✨ Features
+## Features
 
-### 🔒 Authentication & Security
+### Authentication & Security
 - **Stateless JWT Authentication**: Secure 24-hour token expiration with HS256 signing.
 - **BCrypt Hashing**: Passwords stored securely with adaptive salt rounds.
 - **Granular Role-Based Access Control (RBAC)**: 4 predefined system roles (`FLEET_MANAGER`, `DISPATCHER`, `DRIVER`, `MAINTENANCE_TECH`).
 
-### 🚛 Fleet & Driver Management
+### Fleet & Driver Management
 - **Vehicle Inventory**: Real-time status (`AVAILABLE`, `ON_TRIP`, `UNDER_MAINTENANCE`), mileage tracking, and fuel level monitoring.
 - **Driver Profiles**: Verified operator licenses, safety rating tracking (4.9 ★ scale), and duty state management (`AVAILABLE`, `ON_TRIP`, `OFF_DUTY`).
 
-### 🗺️ Operations & Telemetry
+### Operations & Telemetry
 - **Trip Lifecycle Management**: Immediate dispatching, advance trip scheduling, active journey tracking, and cancellation controls.
 - **Live Fleet Monitoring**: Real-time vehicle telemetry auto-refreshing every 5 seconds with speeding alerts (> 100 km/h) and GPS location badges.
 - **Maintenance Tracking**: Complete service log history, repair cost calculation, and automated mileage interval alerts (every 5,000 km).
 
-### 📊 Analytics & Usability
+### Analytics & Usability
 - **Interactive Executive Dashboard**: Donut charts for fleet availability distribution, top performing drivers/vehicles, and fuel cost efficiency analytics.
 - **Data Export**: One-click CSV export across all list tables (Vehicles, Drivers, Trips, Maintenance).
 - **Theme Support**: Seamless Dark Mode / Light Mode toggle with glassmorphism UI components.
@@ -62,7 +62,7 @@ An enterprise-grade Fleet Management System built with **Spring Boot 3** and **R
 ---
 
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology | Version | Description |
 |---|---|---|---|
@@ -84,7 +84,7 @@ An enterprise-grade Fleet Management System built with **Spring Boot 3** and **R
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```text
                                +----------------------------------+
@@ -115,7 +115,7 @@ An enterprise-grade Fleet Management System built with **Spring Boot 3** and **R
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 Fleetfocus/
@@ -159,7 +159,7 @@ Fleetfocus/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 Ensure you have the following installed on your local system:
@@ -236,7 +236,7 @@ USE fleetfocus_db;
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 FleetFocus utilizes 7 relational database entities mapped via JPA:
 
@@ -261,7 +261,7 @@ Relationship Overview:
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
 Interactive OpenAPI 3.0 documentation is powered by Swagger UI.
 
@@ -293,7 +293,7 @@ curl -X POST http://localhost:8080/api/trips/start \
 
 ---
 
-## 🔐 Role-Based Access Control
+## Role-Based Access Control
 
 | Feature / Action | FLEET_MANAGER | DISPATCHER | DRIVER | MAINTENANCE_TECH |
 |---|:---:|:---:|:---:|:---:|
@@ -301,13 +301,13 @@ curl -X POST http://localhost:8080/api/trips/start \
 | **Create / Edit / Delete Vehicles** | ✅ | ❌ | ❌ | ❌ |
 | **Create / Edit / Delete Drivers** | ✅ | ❌ | ❌ | ❌ |
 | **Dispatch & Schedule Trips** | ✅ | ✅ | ❌ | ❌ |
-| **End / Cancel Trips** | ✅ | ✅ | ✅ (Own) | ❌ |
+| **End / Cancel Trips** | ✅ | ✅ | ✅ | ❌ |
 | **Log Maintenance & Service** | ✅ | ❌ | ❌ | ✅ |
 | **Export Data to CSV** | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
-## 🔑 Test Credentials
+## Test Credentials
 
 Use these pre-configured user credentials to test various role permissions:
 
@@ -320,7 +320,7 @@ Use these pre-configured user credentials to test various role permissions:
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Backend Unit & Integration Tests (TestNG)
 Execute backend unit tests:
@@ -350,7 +350,7 @@ Time:        4.12 s
 
 ---
 
-## 📈 Project Status
+## Project Status
 
 - **Backend Development**: ![100%](https://geps.dev/progress/100) Complete
 - **Frontend UI/UX Upgrade**: ![100%](https://geps.dev/progress/100) Complete
@@ -359,7 +359,7 @@ Time:        4.12 s
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [x] JWT Authentication & Role-Based Access Control
 - [x] Enterprise SaaS UI Design System (Tailwind CSS v3 + Lucide)
@@ -372,7 +372,7 @@ Time:        4.12 s
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please follow these steps:
 1. Fork the repository (`https://github.com/vadshan30/Fleetfocus`)
@@ -383,13 +383,13 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## 📜 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 - **Name**: SRI VADSHAN J
 - **Department**: Artificial Intelligence & Data Science (AI&DS-C)
