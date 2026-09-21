@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import Icon from '../ui/Icon';
 
 const getStatusColor = (status, isDark) => {
@@ -49,15 +49,34 @@ const formatTimestamp = (rawTime) => {
   }
 };
 
-const VehicleRow = ({ vehicle, isDark }) => {
+const VehicleRow = ({ vehicle, isDark, isSelected, onClick }) => {
+  const rowRef = useRef(null);
   const statusColor = getStatusColor(vehicle.status, isDark);
   const statusBg = getStatusBg(vehicle.status, isDark);
 
+  useEffect(() => {
+    if (isSelected && rowRef.current) {
+      rowRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isSelected]);
+
+  const activeClasses = isSelected
+    ? `ring-2 ring-blue-500 shadow-md ${isDark ? 'bg-blue-950/60 border-blue-600' : 'bg-blue-50/80 border-blue-300'}`
+    : `${statusBg} border ${isDark ? 'border-slate-700 hover:border-slate-600' : 'border-slate-200 hover:border-slate-300'}`;
+
   return (
     <div
-      className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 ${statusBg} border ${
-        isDark ? 'border-slate-700' : 'border-slate-200'
-      }`}
+      ref={rowRef}
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+      className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer select-none ${activeClasses}`}
       style={{ animation: 'fadeIn 0.3s ease-out' }}
     >
       <div
@@ -69,7 +88,7 @@ const VehicleRow = ({ vehicle, isDark }) => {
               : vehicle.status === 'ON_TRIP'
               ? '#3b82f6'
               : '#f59e0b',
-          boxShadow: '0 0 8px currentColor',
+          boxShadow: isSelected ? '0 0 10px #3b82f6' : '0 0 8px currentColor',
         }}
       />
       <div className="flex-1 min-w-0">
@@ -125,7 +144,7 @@ const VehicleRow = ({ vehicle, isDark }) => {
   );
 };
 
-const LiveTelemetryPanel = ({ vehicles, isDark, isWaiting }) => {
+const LiveTelemetryPanel = ({ vehicles, isDark, isWaiting, selectedVehicleId, onSelectVehicle }) => {
   const sortedVehicles = useMemo(
     () =>
       [...vehicles].sort((a, b) => {
@@ -174,9 +193,20 @@ const LiveTelemetryPanel = ({ vehicles, isDark, isWaiting }) => {
         </span>
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-        {sortedVehicles.map((vehicle) => (
-          <VehicleRow key={vehicle.vehicleId || vehicle.id} vehicle={vehicle} isDark={isDark} />
-        ))}
+        {sortedVehicles.map((vehicle) => {
+          const vKey = String(vehicle.vehicleId || vehicle.id);
+          const isSelected = selectedVehicleId && String(selectedVehicleId) === vKey;
+
+          return (
+            <VehicleRow
+              key={vKey}
+              vehicle={vehicle}
+              isDark={isDark}
+              isSelected={!!isSelected}
+              onClick={() => onSelectVehicle?.(vKey)}
+            />
+          );
+        })}
       </div>
     </div>
   );

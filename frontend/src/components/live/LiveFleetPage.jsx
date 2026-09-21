@@ -19,6 +19,7 @@ const LiveFleetPage = () => {
   const [showGeofences, setShowGeofences] = useState(true);
   const [showGeofenceList, setShowGeofenceList] = useState(true);
   const [selectedGeofenceId, setSelectedGeofenceId] = useState(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [pickMode, setPickMode] = useState(false);
   const [pendingGeofenceData, setPendingGeofenceData] = useState(null);
@@ -136,6 +137,12 @@ const LiveFleetPage = () => {
 
   const handleGeofenceSelect = useCallback((geofence) => {
     setSelectedGeofenceId(geofence.id);
+  }, []);
+
+  const handleSelectVehicle = useCallback((vehicleId) => {
+    setSelectedVehicleId((prev) =>
+      vehicleId && String(prev) === String(vehicleId) ? null : (vehicleId ? String(vehicleId) : null)
+    );
   }, []);
 
   const handleAddGeofence = useCallback(() => {
@@ -299,6 +306,8 @@ const LiveFleetPage = () => {
                 onAddGeofence={handleAddGeofence}
                 onSelectGeofence={handleGeofenceSelect}
                 selectedGeofenceId={selectedGeofenceId}
+                selectedVehicleId={selectedVehicleId}
+                onSelectVehicle={handleSelectVehicle}
                 pickMode={pickMode}
                 onPickCoordinates={handlePickCoordinates}
               />
@@ -312,6 +321,8 @@ const LiveFleetPage = () => {
                 vehicles={vehicles}
                 isDark={isDark}
                 isWaiting={waitingForTelemetry && vehicles.length === 0}
+                selectedVehicleId={selectedVehicleId}
+                onSelectVehicle={handleSelectVehicle}
               />
             </div>
           </div>

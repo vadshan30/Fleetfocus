@@ -15,7 +15,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const createVehicleIcon = (status, isDark) => {
+const createVehicleIcon = (status, isDark, isSelected = false) => {
   const colors = {
     AVAILABLE: isDark ? '#34d399' : '#10b981',
     ON_TRIP: isDark ? '#60a5fa' : '#3b82f6',
@@ -24,21 +24,25 @@ const createVehicleIcon = (status, isDark) => {
   };
 
   const color = colors[status] || colors.AVAILABLE;
+  const shadow = isSelected
+    ? '0 0 0 4px #3b82f6, 0 2px 14px rgba(59, 130, 246, 0.7)'
+    : '0 2px 8px rgba(0,0,0,0.3)';
 
   return L.divIcon({
-    className: 'vehicle-marker',
+    className: `vehicle-marker ${isSelected ? 'selected' : ''}`,
     html: `
       <div style="
         width: 24px;
         height: 24px;
         border-radius: 50%;
         background: ${color};
-        border: 3px solid ${isDark ? '#1e293b' : '#ffffff'};
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border: 3px solid ${isSelected ? '#3b82f6' : (isDark ? '#1e293b' : '#ffffff')};
+        box-shadow: ${shadow};
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: transform 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transform: ${isSelected ? 'scale(1.2)' : 'scale(1)'};
       ">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
@@ -51,37 +55,80 @@ const createVehicleIcon = (status, isDark) => {
   });
 };
 
-const MarkerLayer = ({ vehicles, isDark }) => {
+const MarkerLayer = ({ vehicles, isDark, selectedVehicleId, onSelectVehicle, pickMode }) => {
   const map = useMap();
   const markersRef = useRef(new Map());
+  const prevSelectedIdRef = useRef(null);
 
+  // Sync markers with vehicle stream
   useEffect(() => {
     vehicles.forEach((vehicle) => {
-      const key = vehicle.vehicleId;
+      const key = String(vehicle.vehicleId || vehicle.id);
+      const isSelected = selectedVehicleId && String(selectedVehicleId) === key;
       const existingMarker = markersRef.current.get(key);
       const position = [vehicle.lat, vehicle.lng];
 
       if (existingMarker) {
         existingMarker.setLatLng(position);
-        existingMarker.setIcon(createVehicleIcon(vehicle.status, isDark));
+        existingMarker.setIcon(createVehicleIcon(vehicle.status, isDark, isSelected));
+        existingMarker.setZIndexOffset(isSelected ? 1000 : 0);
         existingMarker.getPopup()?.setContent(getPopupContent(vehicle, isDark));
       } else {
         const marker = L.marker(position, {
-          icon: createVehicleIcon(vehicle.status, isDark),
+          icon: createVehicleIcon(vehicle.status, isDark, isSelected),
+          zIndexOffset: isSelected ? 1000 : 0,
         })
           .bindPopup(getPopupContent(vehicle, isDark))
           .addTo(map);
+
+        marker.on('click', (e) => {
+          if (e.originalEvent) {
+            e.originalEvent._stopped = true;
+          }
+          L.DomEvent.stopPropagation(e);
+          if (!pickMode && onSelectVehicle) {
+            onSelectVehicle(key);
+          }
+        });
+
         markersRef.current.set(key, marker);
       }
     });
 
     markersRef.current.forEach((marker, key) => {
-      if (!vehicles.some((v) => v.vehicleId === key)) {
+      if (!vehicles.some((v) => String(v.vehicleId || v.id) === key)) {
         map.removeLayer(marker);
         markersRef.current.delete(key);
       }
     });
-  }, [vehicles, map, isDark]);
+  }, [vehicles, map, isDark, selectedVehicleId, onSelectVehicle, pickMode]);
+
+  // React to selection changes (flyTo + openPopup)
+  useEffect(() => {
+    const currentKey = selectedVehicleId ? String(selectedVehicleId) : null;
+    const prevKey = prevSelectedIdRef.current ? String(prevSelectedIdRef.current) : null;
+
+    if (currentKey && currentKey !== prevKey) {
+      const marker = markersRef.current.get(currentKey);
+      if (marker) {
+        const latLng = marker.getLatLng();
+        if (latLng && typeof latLng.lat === 'number' && typeof latLng.lng === 'number') {
+          map.flyTo(latLng, Math.max(map.getZoom(), 14), {
+            duration: 1.0,
+            easeLinearity: 0.25,
+          });
+          marker.openPopup();
+        }
+      }
+    } else if (!currentKey && prevKey) {
+      const prevMarker = markersRef.current.get(prevKey);
+      if (prevMarker && prevMarker.isPopupOpen()) {
+        prevMarker.closePopup();
+      }
+    }
+
+    prevSelectedIdRef.current = selectedVehicleId;
+  }, [selectedVehicleId, map]);
 
   return null;
 };
@@ -91,6 +138,17 @@ const PickModeHandler = ({ enabled, onPick }) => {
     click: (e) => {
       if (enabled) {
         onPick(e.latlng.lat, e.latlng.lng);
+      }
+    },
+  });
+  return null;
+};
+
+const MapClickDeselect = ({ enabled, onDeselect }) => {
+  useMapEvents({
+    click: (e) => {
+      if (enabled && !e.originalEvent?._stopped) {
+        onDeselect(null);
       }
     },
   });
@@ -123,8 +181,8 @@ const getPopupContent = (vehicle, isDark) => {
           <span style="font-weight: 600; color: ${vehicle.engineTemp > 100 ? (isDark ? '#f87171' : '#ef4444') : 'inherit'}">${vehicle.engineTemp}°C</span>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 11px; color: ${mutedColor}; padding-top: 4px; border-top: 1px solid ${borderColor};">
-          <span>Lat: ${vehicle.lat?.toFixed(4) || 'N/A'}</span>
-          <span>Lng: ${vehicle.lng?.toFixed(4) || 'N/A'}</span>
+          <span>Lat: ${typeof vehicle.lat === 'number' ? vehicle.lat.toFixed(4) : 'N/A'}</span>
+          <span>Lng: ${typeof vehicle.lng === 'number' ? vehicle.lng.toFixed(4) : 'N/A'}</span>
         </div>
       </div>
     </div>
@@ -176,18 +234,34 @@ const MapToolbar = ({ showGeofences, onToggleGeofences, onAddGeofence, isDark, p
   );
 };
 
-const LiveFleetMap = ({ vehicles, geofences, isDark, showGeofences, onToggleGeofences, onAddGeofence, onSelectGeofence, selectedGeofenceId, pickMode, onPickCoordinates }) => {
+const LiveFleetMap = ({
+  vehicles,
+  geofences,
+  isDark,
+  showGeofences,
+  onToggleGeofences,
+  onAddGeofence,
+  onSelectGeofence,
+  selectedGeofenceId,
+  selectedVehicleId,
+  onSelectVehicle,
+  pickMode,
+  onPickCoordinates,
+}) => {
   const [mapCenter, setMapCenter] = useState([39.8283, -98.5795]);
   const [mapZoom, setMapZoom] = useState(4);
+  const initialCenteredRef = useRef(false);
 
+  // Set initial map center once when vehicles first load, without overriding user panning/fly-to
   useEffect(() => {
-    if (vehicles.length > 0) {
-      const validVehicles = vehicles.filter((v) => v.lat && v.lng);
+    if (!initialCenteredRef.current && vehicles.length > 0) {
+      const validVehicles = vehicles.filter((v) => typeof v.lat === 'number' && typeof v.lng === 'number');
       if (validVehicles.length > 0) {
         const avgLat = validVehicles.reduce((sum, v) => sum + v.lat, 0) / validVehicles.length;
         const avgLng = validVehicles.reduce((sum, v) => sum + v.lng, 0) / validVehicles.length;
         setMapCenter([avgLat, avgLng]);
         setMapZoom(validVehicles.length === 1 ? 12 : 5);
+        initialCenteredRef.current = true;
       }
     }
   }, [vehicles]);
@@ -201,7 +275,13 @@ const LiveFleetMap = ({ vehicles, geofences, isDark, showGeofences, onToggleGeof
         style={{ height: '100%', width: '100%' }}
       >
         <MapTileLayer isDark={isDark} />
-        <MarkerLayer vehicles={vehicles} isDark={isDark} />
+        <MarkerLayer
+          vehicles={vehicles}
+          isDark={isDark}
+          selectedVehicleId={selectedVehicleId}
+          onSelectVehicle={onSelectVehicle}
+          pickMode={pickMode}
+        />
         {showGeofences && (
           <GeofenceLayer
             geofences={geofences}
@@ -211,6 +291,7 @@ const LiveFleetMap = ({ vehicles, geofences, isDark, showGeofences, onToggleGeof
           />
         )}
         <PickModeHandler enabled={pickMode} onPick={onPickCoordinates} />
+        <MapClickDeselect enabled={!pickMode} onDeselect={onSelectVehicle} />
       </MapContainer>
       <MapToolbar
         showGeofences={showGeofences}
