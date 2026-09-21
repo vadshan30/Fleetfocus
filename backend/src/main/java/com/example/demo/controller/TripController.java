@@ -34,19 +34,36 @@ public class TripController {
 
     @Operation(
             summary = "Get all trips",
-            description = "Retrieves all trips. Managers and Dispatchers view all fleet trips, while Drivers view only their own assigned trips."
+            description = "Retrieves all trips across the entire fleet. Restricted to Managers and Dispatchers."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved trips list"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid JWT bearer token")
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid JWT bearer token"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Requires FLEET_MANAGER or DISPATCHER role")
     })
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<List<Trip>> getAllTrips() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         List<Trip> trips = tripService.getAllTripsForUser(username);
         return ResponseEntity.ok(trips);
+    }
+
+    @Operation(
+            summary = "Get trips assigned to current driver",
+            description = "Retrieves all trips assigned to the currently authenticated driver user."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved driver's assigned trips"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid JWT bearer token"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Requires DRIVER role")
+    })
+    @GetMapping("/mine")
+    @PreAuthorize("hasRole('DRIVER')")
+    public List<Trip> getMyTrips(Authentication auth) {
+        String username = auth != null ? auth.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
+        return tripService.getTripsByDriverUsername(username);
     }
 
     @Operation(
@@ -57,10 +74,11 @@ public class TripController {
             @ApiResponse(responseCode = "201", description = "Trip dispatched successfully",
                     content = @Content(schema = @Schema(implementation = Trip.class))),
             @ApiResponse(responseCode = "400", description = "Bad Request - Vehicle or driver not available"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid JWT bearer token")
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid JWT bearer token"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Requires FLEET_MANAGER or DISPATCHER role")
     })
     @PostMapping("/start")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<Trip> startTrip(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "JSON payload containing vehicleId and driverId",
@@ -80,10 +98,11 @@ public class TripController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Trip completed successfully"),
             @ApiResponse(responseCode = "400", description = "Bad Request - Cannot end a completed or cancelled trip"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Requires FLEET_MANAGER or DISPATCHER role"),
             @ApiResponse(responseCode = "404", description = "Trip not found")
     })
     @PutMapping("/{id}/end")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<Trip> endTrip(
             @Parameter(name = "id", description = "Trip Database ID", example = "1")
             @PathVariable Long id,
@@ -144,7 +163,7 @@ public class TripController {
             description = "Retrieves all trips assigned to a specific driver by driver ID."
     )
     @GetMapping("/driver/{driverId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<List<Trip>> getTripsByDriver(
             @Parameter(name = "driverId", description = "Driver Database ID", example = "1")
             @PathVariable Long driverId) {
@@ -157,7 +176,7 @@ public class TripController {
             description = "Retrieves all trip history associated with a specific vehicle by vehicle ID."
     )
     @GetMapping("/vehicle/{vehicleId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<List<Trip>> getTripsByVehicle(
             @Parameter(name = "vehicleId", description = "Vehicle Database ID", example = "1")
             @PathVariable Long vehicleId) {

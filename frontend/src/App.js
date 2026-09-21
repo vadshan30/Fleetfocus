@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-// Auth
+import useAuth from './hooks/useAuth';
+
+// Auth & Access Control
 import Login from './components/Login';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import AccessDenied from './components/common/AccessDenied';
 
 // Layout
 import Sidebar from './components/layout/Sidebar';
@@ -15,6 +18,8 @@ import VehicleList from './components/vehicles/VehicleList';
 import VehicleDetails from './components/vehicles/VehicleDetails';
 import DriverList from './components/drivers/DriverList';
 import TripList from './components/trips/TripList';
+import MyTripsPage from './components/trips/MyTripsPage';
+import MyVehiclePage from './components/vehicles/MyVehiclePage';
 import MaintenanceList from './components/maintenance/MaintenanceList';
 import LiveFleet from './components/dashboard/LiveFleet';
 import LiveFleetPage from './components/live/LiveFleetPage';
@@ -24,16 +29,8 @@ import PlaybackPage from './components/playback/PlaybackPage';
 
 import './App.css';
 
-const ProtectedRoute = ({ children }) => {
-  const user = useSelector((state) => state.auth.user);
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
-};
-
 function App() {
-  const user = useSelector((state) => state.auth.user);
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
 
@@ -78,18 +75,121 @@ function App() {
 
         <div className="app-content">
           <Routes>
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/vehicles" element={<ProtectedRoute><VehicleList /></ProtectedRoute>} />
-            <Route path="/vehicles/:id" element={<ProtectedRoute><VehicleDetails /></ProtectedRoute>} />
-            <Route path="/drivers" element={<ProtectedRoute><DriverList /></ProtectedRoute>} />
-            <Route path="/trips" element={<ProtectedRoute><TripList /></ProtectedRoute>} />
-            <Route path="/maintenance" element={<ProtectedRoute><MaintenanceList /></ProtectedRoute>} />
-            <Route path="/live" element={<ProtectedRoute><LiveFleet /></ProtectedRoute>} />
-            <Route path="/live-fleet" element={<ProtectedRoute><LiveFleetPage /></ProtectedRoute>} />
-            <Route path="/playback" element={<ProtectedRoute><PlaybackPage /></ProtectedRoute>} />
-            <Route path="/alerts" element={<ProtectedRoute><AlertCenterPage /></ProtectedRoute>} />
-            <Route path="/settings/alerts" element={<ProtectedRoute><AlertRulesPage /></ProtectedRoute>} />
-            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER', 'DRIVER', 'TECHNICIAN']}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER', 'DRIVER', 'TECHNICIAN']}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vehicles"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER', 'TECHNICIAN']}>
+                  <VehicleList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vehicles/:id"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER', 'TECHNICIAN']}>
+                  <VehicleDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/drivers"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER']}>
+                  <DriverList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trips"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER']}>
+                  <TripList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-trips"
+              element={
+                <ProtectedRoute roles={['DRIVER']}>
+                  <MyTripsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-vehicle"
+              element={
+                <ProtectedRoute roles={['DRIVER']}>
+                  <MyVehiclePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/maintenance"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'TECHNICIAN']}>
+                  <MaintenanceList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/live"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER']}>
+                  <LiveFleet />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/live-fleet"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER']}>
+                  <LiveFleetPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/playback"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER']}>
+                  <PlaybackPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/alerts"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER', 'TECHNICIAN']}>
+                  <AlertCenterPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/alerts"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER']}>
+                  <AlertRulesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/403" element={<AccessDenied />} />
+            <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </div>
       </div>

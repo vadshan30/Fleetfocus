@@ -37,12 +37,14 @@ public class AlertRuleController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
     public ResponseEntity<AlertRule> createRule(@RequestBody AlertRule rule) {
         AlertRule created = alertRuleService.createRule(rule);
         return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
     public ResponseEntity<AlertRule> updateRule(@PathVariable Long id, @RequestBody AlertRule rule) {
         AlertRule updated = alertRuleService.updateRule(id, rule);
         if (updated == null) {
@@ -52,6 +54,7 @@ public class AlertRuleController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
     public ResponseEntity<Void> deleteRule(@PathVariable Long id) {
         alertRuleService.deactivateRule(id);
         return ResponseEntity.ok().build();

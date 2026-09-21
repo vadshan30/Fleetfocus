@@ -36,6 +36,10 @@ public class TripService {
         return tripRepository.findAll();
     }
 
+    public List<Trip> getTripsByDriverUsername(String username) {
+        return tripRepository.findByDriverUsername(username);
+    }
+
     public Trip getTripById(Long id) {
         return tripRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trip not found with id: " + id));

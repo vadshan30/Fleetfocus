@@ -19,7 +19,7 @@ public class DriverController {
     private DriverService driverService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER', 'DRIVER')")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<List<Driver>> getAllDrivers() {
         List<Driver> drivers = driverService.getAllDrivers();
         System.out.println("🔵 getAllDrivers called, returning: " + drivers.size() + " drivers");

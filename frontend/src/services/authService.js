@@ -16,6 +16,11 @@ const authService = {
     return response.data;
   },
 
+  getMe: async () => {
+    const response = await api.get('/auth/me');
+    return response.data;
+  },
+
   logout: () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');

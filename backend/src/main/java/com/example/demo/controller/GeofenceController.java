@@ -11,23 +11,25 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/geofences")
-@PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
 public class GeofenceController {
 
     @Autowired
     private GeofenceService geofenceService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Geofence>> getAllGeofences() {
         return ResponseEntity.ok(geofenceService.getAllGeofences());
     }
 
     @GetMapping("/active")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Geofence>> getActiveGeofences() {
         return ResponseEntity.ok(geofenceService.getActiveGeofences());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Geofence> getGeofence(@PathVariable Long id) {
         Geofence geofence = geofenceService.getGeofenceById(id);
         if (geofence == null) {
@@ -37,12 +39,14 @@ public class GeofenceController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<Geofence> createGeofence(@RequestBody Geofence geofence) {
         Geofence created = geofenceService.createGeofence(geofence);
         return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<Geofence> updateGeofence(@PathVariable Long id, @RequestBody Geofence geofence) {
         Geofence updated = geofenceService.updateGeofence(id, geofence);
         if (updated == null) {
@@ -52,6 +56,7 @@ public class GeofenceController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<Void> deleteGeofence(@PathVariable Long id) {
         geofenceService.deactivateGeofence(id);
         return ResponseEntity.ok().build();

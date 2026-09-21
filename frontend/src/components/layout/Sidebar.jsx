@@ -1,62 +1,54 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { logout } from '../../store/slices/authSlice';
+import useAuth from '../../hooks/useAuth';
+import { NAV_ITEMS } from '../../config/navConfig';
 import DarkModeToggle from '../common/DarkModeToggle';
+import Icon from '../ui/Icon';
 import './Layout.css';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const user = useSelector((state) => state.auth.user);
-  const dispatch = useDispatch();
+  const { user, role, isAuthorized, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   if (!user) return null;
 
   const handleLogout = () => {
-    dispatch(logout());
+    logout();
     navigate('/login');
   };
 
-  const menuItems = [
-    { path: '/', icon: '📊', label: 'Dashboard' },
-    { path: '/vehicles', icon: '🚛', label: 'Vehicles' },
-    { path: '/drivers', icon: '👤', label: 'Drivers' },
-    { path: '/trips', icon: '📍', label: 'Trips' },
-    ...(user.role === 'FLEET_MANAGER' || user.role === 'MAINTENANCE_TECH' 
-      ? [{ path: '/maintenance', icon: '🔧', label: 'Maintenance' }] 
-      : []),
-    { path: '/live-fleet', icon: '📡', label: 'Live Fleet' },
-    { path: '/playback', icon: '⏱️', label: 'Playback' },
-    ...(user.role === 'FLEET_MANAGER' || user.role === 'DISPATCHER' 
-      ? [{ path: '/settings/alerts', icon: '⚙️', label: 'Alert Rules' }] 
-      : []),
-  ];
+  const filteredItems = NAV_ITEMS.filter((item) => isAuthorized(item.roles));
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard' || location.pathname === '/';
+    }
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
 
   return (
     <>
       <div className={`ff-sidebar ${isOpen ? 'open' : 'closed'}`}>
         <div className="ff-sidebar-header">
           <div className="ff-sidebar-brand">
-            <span>🚚</span>
+            <span className="text-xl">🚚</span>
             <span>FleetFocus</span>
           </div>
-          <button onClick={toggleSidebar} className="ff-sidebar-close-btn">
+          <button onClick={toggleSidebar} className="ff-sidebar-close-btn" aria-label="Close menu">
             ✕
           </button>
         </div>
 
         <div className="ff-sidebar-menu">
-          {menuItems.map((item) => (
+          {filteredItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               onClick={toggleSidebar}
               className={`ff-sidebar-link ${isActive(item.path) ? 'active' : ''}`}
             >
-              <span className="ff-sidebar-link-icon">{item.icon}</span>
+              <Icon name={item.icon} size={18} className="ff-sidebar-link-icon" />
               <span>{item.label}</span>
               {isActive(item.path) && (
                 <span className="ff-sidebar-active-dot" />
@@ -75,13 +67,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 {user.username}
               </div>
               <div className="ff-sidebar-userrole">
-                {user.role?.replace('_', ' ') || 'User'}
+                {role ? role.replace('_', ' ') : 'User'}
               </div>
             </div>
             <DarkModeToggle />
           </div>
           <button onClick={handleLogout} className="ff-sidebar-logout-btn">
-            <span>🚪</span>
+            <Icon name="LogOut" size={16} />
             <span>Logout</span>
           </button>
         </div>

@@ -4,6 +4,7 @@ import com.example.demo.dto.AuthRequestDto;
 import com.example.demo.dto.AuthResponseDto;
 import com.example.demo.dto.RegisterRequestDto;
 import com.example.demo.dto.RegisterResponseDto;
+import com.example.demo.dto.UserInfoDto;
 import com.example.demo.entity.SystemUser;
 import com.example.demo.entity.UserRole;
 import com.example.demo.repository.SystemUserRepository;
@@ -70,5 +71,11 @@ public class AuthService {
                 savedUser.getRole().name(),
                 savedUser.getId()
         );
+    }
+
+    public UserInfoDto getUserInfo(String username) {
+        SystemUser user = systemUserRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+        return new UserInfoDto(user.getId(), user.getUsername(), user.getRole().name(), user.getEmail());
     }
 }

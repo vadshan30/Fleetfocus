@@ -24,7 +24,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/alerts")
-@PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
+@PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER', 'MAINTENANCE_TECH', 'TECHNICIAN', 'DRIVER')")
 public class AlertController {
 
     @Autowired
@@ -86,7 +86,7 @@ public class AlertController {
     }
 
     @PostMapping("/bulk-acknowledge")
-    @PreAuthorize("hasAnyRole('FLEET_MANAGER','DISPATCHER')")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER', 'MAINTENANCE_TECH', 'TECHNICIAN')")
     public ResponseEntity<Map<String, Integer>> bulkAcknowledge(
             @RequestBody Map<String, List<Long>> request,
             Authentication auth) {
@@ -97,7 +97,7 @@ public class AlertController {
     }
 
     @PostMapping("/bulk-resolve")
-    @PreAuthorize("hasAnyRole('FLEET_MANAGER','DISPATCHER')")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER', 'MAINTENANCE_TECH', 'TECHNICIAN')")
     public ResponseEntity<Map<String, Integer>> bulkResolve(
             @RequestBody Map<String, List<Long>> request,
             Authentication auth) {

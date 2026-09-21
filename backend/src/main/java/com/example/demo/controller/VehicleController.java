@@ -45,7 +45,7 @@ public class VehicleController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping
-    @PreAuthorize("hasAnyRole('FLEET_MANAGER','DISPATCHER','DRIVER','MAINTENANCE_TECH')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<Vehicle>> getAllVehicles(
             @Parameter(name = "page", description = "Page number (0-indexed)", example = "0")
             @RequestParam(defaultValue = "0") int page,
@@ -62,11 +62,10 @@ public class VehicleController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved available vehicles"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid JWT bearer token"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Requires FLEET_MANAGER or DISPATCHER role")
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid JWT bearer token")
     })
     @GetMapping("/available")
-    @PreAuthorize("hasAnyRole('FLEET_MANAGER','DISPATCHER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Vehicle>> getAvailableVehicles() {
 
         List<Vehicle> vehicles =
@@ -91,7 +90,7 @@ public class VehicleController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid JWT bearer token")
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('FLEET_MANAGER','DISPATCHER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Vehicle> getVehicleById(
             @Parameter(name = "id", description = "Vehicle Database ID", example = "1")
             @PathVariable Long id) {

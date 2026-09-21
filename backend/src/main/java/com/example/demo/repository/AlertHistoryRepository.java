@@ -28,6 +28,8 @@ public interface AlertHistoryRepository extends JpaRepository<AlertHistory, Long
 
     Page<AlertHistory> findBySeverityOrderByOccurredAtDesc(AlertSeverity severity, Pageable pageable);
 
+    List<AlertHistory> findBySeverityInOrderByOccurredAtDesc(List<AlertSeverity> severities);
+
     Page<AlertHistory> findByResolvedOrderByOccurredAtDesc(Boolean resolved, Pageable pageable);
 
     @Query("SELECT a FROM AlertHistory a WHERE a.vehicleId = :vehicleId AND a.alertType = :alertType AND a.occurredAt > :since")

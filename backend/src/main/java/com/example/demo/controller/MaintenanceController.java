@@ -18,13 +18,13 @@ public class MaintenanceController {
     private MaintenanceService maintenanceService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'MAINTENANCE_TECH')")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER', 'MAINTENANCE_TECH', 'TECHNICIAN')")
     public ResponseEntity<List<MaintenanceLog>> getAllMaintenanceLogs() {
         return ResponseEntity.ok(maintenanceService.getAllLogs());
     }
 
     @PostMapping("/log")
-    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'MAINTENANCE_TECH')")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'MAINTENANCE_TECH', 'TECHNICIAN')")
     public ResponseEntity<MaintenanceLog> logMaintenance(@RequestBody MaintenanceLog maintenanceLog) {
         MaintenanceLog savedLog = maintenanceService.logMaintenance(maintenanceLog);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedLog);

@@ -4,6 +4,8 @@ import com.example.demo.entity.Trip;
 import com.example.demo.entity.TripStatus;
 import com.example.demo.entity.Vehicle;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -22,4 +24,7 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     List<Trip> findByVehicleId(Long vehicleId);
 
     List<Trip> findByVehicleIdAndStatus(Long vehicleId, TripStatus status);
+
+    @Query("SELECT t FROM Trip t WHERE t.driver.user.username = :username ORDER BY t.startTime DESC")
+    List<Trip> findByDriverUsername(@Param("username") String username);
 }

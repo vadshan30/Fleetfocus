@@ -6,6 +6,11 @@ const tripService = {
     return response.data;
   },
 
+  getMyTrips: async () => {
+    const response = await api.get('/trips/mine');
+    return response.data;
+  },
+
   getById: async (id) => {
     const response = await api.get(`/trips/${id}`);
     return response.data;
@@ -39,7 +44,7 @@ const tripService = {
   getByVehicle: async (vehicleId) => {
     const response = await api.get(`/trips/vehicle/${vehicleId}`);
     return response.data;
-  }
+  },
 };
 
 export default tripService;
