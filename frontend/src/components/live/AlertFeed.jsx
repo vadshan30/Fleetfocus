@@ -20,7 +20,7 @@ const AlertItem = ({ alert, onAcknowledge, onResolve, isDark }) => {
 
   if (!visible) return null;
 
-  const isGeofence = alert.type?.startsWith('GEOFENCE_');
+  const isGeofence = Boolean(alert.type?.startsWith('GEOFENCE_'));
   const severity = alert.severity || 'info';
 
   const severityColors = {
@@ -72,7 +72,7 @@ const AlertItem = ({ alert, onAcknowledge, onResolve, isDark }) => {
     if (alert.type?.startsWith('GEOFENCE_')) {
       return alert.geofenceName || 'Geofence';
     }
-    return alert.type;
+    return alert.type || 'Alert';
   };
 
   const handleAck = async () => {
@@ -109,7 +109,21 @@ const AlertItem = ({ alert, onAcknowledge, onResolve, isDark }) => {
     }
   };
 
-  const timestamp = alert.timestamp ? new Date(alert.timestamp).toLocaleTimeString() : '--:--:--';
+  const rawTime = alert.occurredAt || alert.timestamp;
+  let timestamp = '—';
+  if (rawTime) {
+    try {
+      const cleaned = typeof rawTime === 'string' && rawTime.includes('.')
+        ? rawTime.replace(/\.(\d{3})\d*/, '.$1')
+        : rawTime;
+      const d = new Date(cleaned);
+      timestamp = isNaN(d.getTime())
+        ? '—'
+        : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch {
+      timestamp = '—';
+    }
+  }
 
   const badgeColor = alert.type === 'RULE_BREACH'
     ? (isDark ? 'bg-purple-950/50 text-purple-400 border-purple-800' : 'bg-purple-50 text-purple-700 border-purple-200')

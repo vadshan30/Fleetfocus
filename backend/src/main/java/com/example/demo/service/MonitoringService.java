@@ -37,15 +37,21 @@ public class MonitoringService {
                     .findByVehicleOrderByRecordedAtDesc(vehicle);
             if (!telemetryList.isEmpty()) {
                 TelemetryData latest = telemetryList.get(0);
+                status.put("lat", latest.getLatitude());
+                status.put("lng", latest.getLongitude());
                 status.put("latitude", latest.getLatitude());
                 status.put("longitude", latest.getLongitude());
                 status.put("speed", latest.getSpeed());
                 status.put("fuelLevel", latest.getFuelLevel());
+                status.put("engineTemp", latest.getEngineTemp());
             } else {
+                status.put("lat", 0.0);
+                status.put("lng", 0.0);
                 status.put("latitude", 0.0);
                 status.put("longitude", 0.0);
                 status.put("speed", 0.0);
                 status.put("fuelLevel", 0.0);
+                status.put("engineTemp", 0.0);
             }
             fleetStatus.add(status);
         }

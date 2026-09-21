@@ -34,6 +34,21 @@ const formatNumber = (num, decimals = 1) => {
   return Number(num).toFixed(decimals);
 };
 
+const formatTimestamp = (rawTime) => {
+  if (!rawTime) return '—';
+  try {
+    const cleaned = typeof rawTime === 'string' && rawTime.includes('.')
+      ? rawTime.replace(/\.(\d{3})\d*/, '.$1')
+      : rawTime;
+    const d = new Date(cleaned);
+    return isNaN(d.getTime())
+      ? '—'
+      : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } catch {
+    return '—';
+  }
+};
+
 const VehicleRow = ({ vehicle, isDark }) => {
   const statusColor = getStatusColor(vehicle.status, isDark);
   const statusBg = getStatusBg(vehicle.status, isDark);
@@ -104,13 +119,13 @@ const VehicleRow = ({ vehicle, isDark }) => {
         </div>
       </div>
       <div className="text-right text-xs text-slate-400 dark:text-slate-500 font-mono">
-        {vehicle.timestamp ? new Date(vehicle.timestamp).toLocaleTimeString() : '--:--:--'}
+        {formatTimestamp(vehicle.timestamp || vehicle.recordedAt)}
       </div>
     </div>
   );
 };
 
-const LiveTelemetryPanel = ({ vehicles, isDark }) => {
+const LiveTelemetryPanel = ({ vehicles, isDark, isWaiting }) => {
   const sortedVehicles = useMemo(
     () =>
       [...vehicles].sort((a, b) => {
@@ -121,11 +136,23 @@ const LiveTelemetryPanel = ({ vehicles, isDark }) => {
   );
 
   if (sortedVehicles.length === 0) {
+    if (isWaiting) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500 p-6">
+          <Icon name="RefreshCw" size={32} className="mb-3 animate-spin text-blue-500" />
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            Waiting for telemetry...
+          </p>
+          <p className="text-xs text-slate-400 mt-1">Connecting to live vehicle stream</p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500 p-6">
         <Icon name="Truck" size={48} className="mb-3 opacity-50" />
-        <p className="text-sm">No vehicles in fleet</p>
-        <p className="text-xs mt-1">Add vehicles to see live telemetry</p>
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No vehicles in fleet</p>
+        <p className="text-xs text-slate-400 mt-1">Add vehicles to see live telemetry</p>
       </div>
     );
   }
@@ -148,7 +175,7 @@ const LiveTelemetryPanel = ({ vehicles, isDark }) => {
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {sortedVehicles.map((vehicle) => (
-          <VehicleRow key={vehicle.vehicleId} vehicle={vehicle} isDark={isDark} />
+          <VehicleRow key={vehicle.vehicleId || vehicle.id} vehicle={vehicle} isDark={isDark} />
         ))}
       </div>
     </div>

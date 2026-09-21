@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import 'leaflet/dist/leaflet.css';
 import websocketService from '../../services/websocketService';
 import geofenceService from '../../services/geofenceService';
+import monitoringService from '../../services/monitoringService';
 import LiveFleetMap from './LiveFleetMap';
 import LiveTelemetryPanel from './LiveTelemetryPanel';
 import AlertFeed from './AlertFeed';
@@ -22,6 +23,7 @@ const LiveFleetPage = () => {
   const [pickMode, setPickMode] = useState(false);
   const [pendingGeofenceData, setPendingGeofenceData] = useState(null);
   const [editingGeofence, setEditingGeofence] = useState(null);
+  const [waitingForTelemetry, setWaitingForTelemetry] = useState(true);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -31,6 +33,7 @@ const LiveFleetPage = () => {
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
+  // 1. Initial REST fetch for geofences
   const fetchGeofences = useCallback(async () => {
     try {
       const data = await geofenceService.getActive();
@@ -44,23 +47,71 @@ const LiveFleetPage = () => {
     fetchGeofences();
   }, [fetchGeofences]);
 
+  // 2. Initial REST fetch for live fleet vehicles on mount
+  const fetchInitialFleet = useCallback(async () => {
+    try {
+      const data = await monitoringService.getLiveFleet();
+      if (Array.isArray(data) && data.length > 0) {
+        const normalized = data.map((v) => ({
+          ...v,
+          vehicleId: String(v.vehicleId || v.id),
+          licensePlate: v.licensePlate || 'N/A',
+          model: v.model || '',
+          status: v.status || 'AVAILABLE',
+          lat: typeof v.lat === 'number' ? v.lat : (typeof v.latitude === 'number' ? v.latitude : null),
+          lng: typeof v.lng === 'number' ? v.lng : (typeof v.longitude === 'number' ? v.longitude : null),
+          speed: typeof v.speed === 'number' ? v.speed : 0,
+          fuelLevel: typeof v.fuelLevel === 'number' ? v.fuelLevel : 0,
+          engineTemp: typeof v.engineTemp === 'number' ? v.engineTemp : 85,
+        }));
+        setVehicles(normalized);
+        setWaitingForTelemetry(false);
+      }
+    } catch (err) {
+      console.error('[LiveFleetPage] Failed to fetch initial fleet status:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInitialFleet();
+    const timer = setTimeout(() => {
+      setWaitingForTelemetry(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [fetchInitialFleet]);
+
+  // 3. WebSocket subscriptions for live telemetry & alerts
   useEffect(() => {
     const unsubscribeStatus = websocketService.onStatusChange(setWsStatus);
 
     const unsubscribeTelemetry = websocketService.subscribe('/topic/telemetry', (data) => {
+      setWaitingForTelemetry(false);
+      if (!data) return;
+
+      const normData = {
+        ...data,
+        vehicleId: String(data.vehicleId || data.id),
+        lat: typeof data.lat === 'number' ? data.lat : (typeof data.latitude === 'number' ? data.latitude : null),
+        lng: typeof data.lng === 'number' ? data.lng : (typeof data.longitude === 'number' ? data.longitude : null),
+      };
+
       setVehicles((prev) => {
-        const exists = prev.find((v) => v.vehicleId === data.vehicleId);
+        const exists = prev.find((v) => String(v.vehicleId || v.id) === normData.vehicleId);
         if (exists) {
           return prev.map((v) =>
-            v.vehicleId === data.vehicleId ? { ...v, ...data } : v
+            String(v.vehicleId || v.id) === normData.vehicleId ? { ...v, ...normData } : v
           );
         }
-        return [...prev, data];
+        return [...prev, normData];
       });
     });
 
     const unsubscribeAlerts = websocketService.subscribe('/topic/alerts', (data) => {
-      const alertWithId = { ...data, id: `${data.vehicleId}-${data.type}-${Date.now()}` };
+      if (!data) return;
+      const alertWithId = {
+        ...data,
+        id: `${data.vehicleId}-${data.type}-${Date.now()}`,
+      };
       setAlerts((prev) => [alertWithId, ...prev].slice(0, 50));
     });
 
@@ -157,7 +208,7 @@ const LiveFleetPage = () => {
       setPendingGeofenceData(null);
       setEditingGeofence(null);
     }
-  }, [editingGeofence, geofenceService, fetchGeofences]);
+  }, [editingGeofence, fetchGeofences]);
 
   const handleDrawerClose = useCallback(() => {
     setIsDrawerOpen(false);
@@ -168,7 +219,7 @@ const LiveFleetPage = () => {
 
   const statusConfig = {
     connected: { label: 'Connected', color: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
-    connecting: { label: 'Reconnecting…', color: 'bg-amber-500', text: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/50' },
+    connecting: { label: 'Connecting…', color: 'bg-amber-500', text: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/50' },
     disconnected: { label: 'Disconnected', color: 'bg-rose-500', text: 'text-rose-700 dark:text-rose-300', bg: 'bg-rose-50 dark:bg-rose-950/50' },
   };
 
@@ -177,16 +228,10 @@ const LiveFleetPage = () => {
   const toggleGeofenceList = () => setShowGeofenceList(!showGeofenceList);
   const toggleGeofences = () => setShowGeofences(!showGeofences);
 
-  const drawerData = pendingGeofenceData || {
-    name: '',
-    description: '',
-    type: 'DEPOT',
-    color: '#3b82f6',
-    radiusMeters: 500,
-    centerLat: '',
-    centerLng: '',
-    active: true,
-  };
+  // Layout grid ratio:
+  // - Sidebar shown: 2 + 6 + 4 = 12 columns
+  // - Sidebar hidden: 0 + 8 + 4 = 12 columns
+  const mapColClass = showGeofenceList ? 'lg:col-span-6' : 'lg:col-span-8';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -229,10 +274,10 @@ const LiveFleetPage = () => {
       {/* MAIN LAYOUT */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid lg:grid-cols-12 gap-6 h-[calc(100vh-280px)] min-h-[600px]">
-          {/* GEOFENCE LIST SIDEBAR - 15% (2/12 cols on lg+) */}
+          {/* GEOFENCE LIST SIDEBAR - 2/12 cols when visible */}
           {showGeofenceList && (
             <div className="lg:col-span-2 h-full hidden lg:block">
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm h-full">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm h-full overflow-hidden">
                 <GeofenceList
                   onSelectGeofence={handleGeofenceSelect}
                   onEditGeofence={handleEditGeofence}
@@ -242,9 +287,9 @@ const LiveFleetPage = () => {
             </div>
           )}
 
-          {/* MAP - 70% (8/12 cols on lg+) or 85% (10/12 cols) when sidebar hidden */}
-          <div className={`lg:col-span-${showGeofenceList ? 8 : 10} h-full transition-all duration-300`}>
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm h-full">
+          {/* MAP - 6/12 cols with sidebar, 8/12 cols without sidebar */}
+          <div className={`${mapColClass} h-full transition-all duration-300`}>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm h-full overflow-hidden">
               <LiveFleetMap
                 vehicles={vehicles}
                 geofences={geofences}
@@ -260,10 +305,14 @@ const LiveFleetPage = () => {
             </div>
           </div>
 
-          {/* TELEMETRY PANEL - 30% (4/12 cols on lg+) */}
+          {/* TELEMETRY PANEL - 4/12 cols */}
           <div className="lg:col-span-4 h-full">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm h-full">
-              <LiveTelemetryPanel vehicles={vehicles} isDark={isDark} />
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm h-full overflow-hidden">
+              <LiveTelemetryPanel
+                vehicles={vehicles}
+                isDark={isDark}
+                isWaiting={waitingForTelemetry && vehicles.length === 0}
+              />
             </div>
           </div>
         </div>
@@ -277,7 +326,7 @@ const LiveFleetPage = () => {
         isDark={isDark}
       />
 
-      {/* GEOFENCE DRAWER - rendered at root level, NOT inside MapContainer */}
+      {/* GEOFENCE DRAWER */}
       <GeofenceDrawer
         isOpen={isDrawerOpen}
         onClose={handleDrawerClose}
