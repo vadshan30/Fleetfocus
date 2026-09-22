@@ -244,6 +244,41 @@ const TripTimeline = ({ trips = [] }) => {
                     }}>
                       {statusLabel}
                     </span>
+                    {(trip.status === 'IN_PROGRESS' || trip.status === 'ACTIVE') && trip.estimatedArrivalTime && (() => {
+                      try {
+                        const date = new Date(trip.estimatedArrivalTime);
+                        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const diffMin = Math.max(0, Math.round((date.getTime() - Date.now()) / 60000));
+                        return (
+                          <span style={{
+                            padding: '2px 10px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            background: '#eff6ff',
+                            color: '#2563eb',
+                            border: '1px solid #bfdbfe'
+                          }}>
+                            ⏱ ETA {timeStr} (~{diffMin} min)
+                          </span>
+                        );
+                      } catch {
+                        return null;
+                      }
+                    })()}
+                    {trip.delayMinutes != null && trip.delayMinutes > 0 && (
+                      <span style={{
+                        padding: '2px 10px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        background: '#fef3c7',
+                        color: '#d97706',
+                        border: '1px solid #fde68a'
+                      }}>
+                        ⚠ Delayed {trip.delayMinutes} min
+                      </span>
+                    )}
                     <span style={{
                       fontSize: '13px',
                       fontWeight: '600',

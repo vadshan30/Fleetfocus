@@ -9,6 +9,11 @@ const ScheduleTripForm = ({ onClose }) => {
   const [vehicleId, setVehicleId] = useState('');
   const [driverId, setDriverId] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
+  const [scheduledEndTime, setScheduledEndTime] = useState('');
+  const [originLat, setOriginLat] = useState('');
+  const [originLng, setOriginLng] = useState('');
+  const [destinationLat, setDestinationLat] = useState('');
+  const [destinationLng, setDestinationLng] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -30,6 +35,8 @@ const ScheduleTripForm = ({ onClose }) => {
 
     const defaultTime = new Date(Date.now() + 3600000);
     setScheduledTime(defaultTime.toISOString().slice(0, 16));
+    const defaultEndTime = new Date(Date.now() + 7200000);
+    setScheduledEndTime(defaultEndTime.toISOString().slice(0, 16));
   }, []);
 
   const handleSubmit = async (e) => {
@@ -37,7 +44,7 @@ const ScheduleTripForm = ({ onClose }) => {
 
     if (!vehicleId || !driverId || !scheduledTime) {
       if (window.addNotification) {
-        window.addNotification('Please fill all fields!', 'warning');
+        window.addNotification('Please fill all required fields!', 'warning');
       }
       return;
     }
@@ -55,11 +62,17 @@ const ScheduleTripForm = ({ onClose }) => {
     setSubmitting(true);
     try {
       const formattedTime = new Date(scheduledTime).toISOString().slice(0, 19);
+      const formattedEndTime = scheduledEndTime ? new Date(scheduledEndTime).toISOString().slice(0, 19) : null;
 
       await tripService.schedule({
         vehicleId: parseInt(vehicleId),
         driverId: parseInt(driverId),
-        scheduledTime: formattedTime
+        scheduledTime: formattedTime,
+        scheduledEndTime: formattedEndTime,
+        originLat: originLat ? parseFloat(originLat) : null,
+        originLng: originLng ? parseFloat(originLng) : null,
+        destinationLat: destinationLat ? parseFloat(destinationLat) : null,
+        destinationLng: destinationLng ? parseFloat(destinationLng) : null,
       });
 
       if (window.addNotification) {
@@ -155,7 +168,7 @@ const ScheduleTripForm = ({ onClose }) => {
 
           <div style={{ marginBottom: '14px' }}>
             <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '14px', color: '#475569' }}>
-              Scheduled Date & Time
+              Scheduled Start Date & Time
             </label>
             <input
               type="datetime-local"
@@ -172,6 +185,106 @@ const ScheduleTripForm = ({ onClose }) => {
             />
           </div>
 
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '14px', color: '#475569' }}>
+              Scheduled Arrival / End Time (Optional - for delay alerts)
+            </label>
+            <input
+              type="datetime-local"
+              value={scheduledEndTime}
+              onChange={(e) => setScheduledEndTime(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '14px'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '12px', color: '#475569' }}>
+                Origin Latitude (Auto-start)
+              </label>
+              <input
+                type="number"
+                step="any"
+                placeholder="e.g. 37.7749"
+                value={originLat}
+                onChange={(e) => setOriginLat(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '13px'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '12px', color: '#475569' }}>
+                Origin Longitude
+              </label>
+              <input
+                type="number"
+                step="any"
+                placeholder="e.g. -122.4194"
+                value={originLng}
+                onChange={(e) => setOriginLng(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '13px'
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '12px', color: '#475569' }}>
+                Destination Latitude (Auto-complete & ETA)
+              </label>
+              <input
+                type="number"
+                step="any"
+                placeholder="e.g. 37.8044"
+                value={destinationLat}
+                onChange={(e) => setDestinationLat(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '13px'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '12px', color: '#475569' }}>
+                Destination Longitude
+              </label>
+              <input
+                type="number"
+                step="any"
+                placeholder="e.g. -122.2712"
+                value={destinationLng}
+                onChange={(e) => setDestinationLng(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '13px'
+                }}
+              />
+            </div>
+          </div>
+
           <div style={{
             padding: '12px 16px',
             background: '#fef3c7',
@@ -180,7 +293,7 @@ const ScheduleTripForm = ({ onClose }) => {
             fontSize: '13px',
             color: '#92400e'
           }}>
-            ⏰ Vehicle and driver will be reserved for this time
+            ⏰ Trip lifecycle will auto-start when leaving origin (&gt;100m) and auto-complete when reaching destination (&le;100m).
           </div>
 
           <div className="modal-actions">

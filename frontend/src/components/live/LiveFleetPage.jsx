@@ -116,6 +116,50 @@ const LiveFleetPage = () => {
       setAlerts((prev) => [alertWithId, ...prev].slice(0, 50));
     });
 
+    const unsubscribeTrips = websocketService.subscribe('/topic/trips', (data) => {
+      if (!data) return;
+      if (data.type === 'TRIP_STARTED') {
+        if (window.addNotification) {
+          window.addNotification(
+            `Trip #${data.tripId} automatically started for vehicle ${data.licensePlate || data.vehicleId}`,
+            'info'
+          );
+        }
+        if (data.vehicleId) {
+          setVehicles((prev) =>
+            prev.map((v) =>
+              String(v.vehicleId || v.id) === String(data.vehicleId)
+                ? { ...v, status: 'ON_TRIP' }
+                : v
+            )
+          );
+        }
+      } else if (data.type === 'TRIP_COMPLETED') {
+        if (window.addNotification) {
+          window.addNotification(
+            `Trip #${data.tripId} reached destination and auto-completed!`,
+            'success'
+          );
+        }
+        if (data.vehicleId) {
+          setVehicles((prev) =>
+            prev.map((v) =>
+              String(v.vehicleId || v.id) === String(data.vehicleId)
+                ? { ...v, status: 'AVAILABLE' }
+                : v
+            )
+          );
+        }
+      } else if (data.type === 'TRIP_DELAYED') {
+        if (window.addNotification) {
+          window.addNotification(
+            `Trip #${data.tripId} delayed by ~${data.delayMinutes} min`,
+            'warning'
+          );
+        }
+      }
+    });
+
     websocketService.connect().catch((err) => {
       console.error('[LiveFleetPage] WebSocket connection failed:', err);
     });
@@ -124,6 +168,7 @@ const LiveFleetPage = () => {
       unsubscribeStatus();
       unsubscribeTelemetry();
       unsubscribeAlerts();
+      unsubscribeTrips();
     };
   }, []);
 

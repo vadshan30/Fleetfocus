@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import tripService from '../../services/tripService';
 import driverService from '../../services/driverService';
 import monitoringService from '../../services/monitoringService';
+import websocketService from '../../services/websocketService';
 
 // UI Components
 import StatCard from '../ui/StatCard';
@@ -80,10 +81,35 @@ const DispatcherDashboard = () => {
   useEffect(() => {
     fetchDispatcherData();
 
+    const unsubscribeTrips = websocketService.subscribe('/topic/trips', (data) => {
+      if (!data || !data.tripId) return;
+      setTrips((prev) => {
+        const exists = prev.find((t) => t.id === data.tripId);
+        if (exists) {
+          return prev.map((t) =>
+            t.id === data.tripId
+              ? {
+                  ...t,
+                  status: data.status || (data.type === 'TRIP_STARTED' ? 'IN_PROGRESS' : (data.type === 'TRIP_COMPLETED' ? 'COMPLETED' : t.status)),
+                  actualStartTime: data.actualStartTime || t.actualStartTime,
+                  actualEndTime: data.actualEndTime || t.actualEndTime,
+                  estimatedArrivalTime: data.estimatedArrivalTime !== undefined ? data.estimatedArrivalTime : t.estimatedArrivalTime,
+                  delayMinutes: data.delayMinutes !== undefined ? data.delayMinutes : t.delayMinutes,
+                }
+              : t
+          );
+        }
+        return prev;
+      });
+    });
+
     const interval = setInterval(() => {
       monitoringService.getLiveFleet().then((data) => setFleet(Array.isArray(data) ? data : [])).catch(() => {});
     }, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      unsubscribeTrips();
+    };
   }, [fetchDispatcherData]);
 
   const activeTrips = trips.filter((t) => t.status === 'IN_PROGRESS');
@@ -342,6 +368,107 @@ const DispatcherDashboard = () => {
         </div>
       </div>
 
+      {/* ACTIVE TRIPS WITH LIVE ETA & DELAY WIDGET */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <Icon name="Activity" size={18} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
+                  Active Trips ({activeTrips.length})
+                </h3>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
+                  Automated Lifecycle
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Live ETA, delay warning, and route progress
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/trips')}
+            className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+          >
+            <span>Manage All</span>
+            <Icon name="ChevronRight" size={12} />
+          </button>
+        </div>
+
+        {activeTrips.length === 0 ? (
+          <div className="py-8 text-center text-slate-400 text-xs">
+            No active trips currently in transit.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {activeTrips.map((trip) => {
+              const formatEta = (isoString) => {
+                if (!isoString) return null;
+                try {
+                  const date = new Date(isoString);
+                  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  const diffMs = date.getTime() - Date.now();
+                  const diffMin = Math.max(0, Math.round(diffMs / 60000));
+                  return { timeStr, diffMin };
+                } catch {
+                  return null;
+                }
+              };
+              const etaInfo = formatEta(trip.estimatedArrivalTime);
+              const isDelayed = trip.delayMinutes != null && trip.delayMinutes > 0;
+
+              return (
+                <div
+                  key={trip.id}
+                  onClick={() => navigate('/trips')}
+                  className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-white dark:hover:bg-slate-900 transition-all cursor-pointer shadow-sm flex flex-col justify-between gap-2.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
+                      TRP-{trip.id}
+                    </span>
+                    <StatusBadge status={trip.status} />
+                  </div>
+
+                  <div>
+                    <div className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                      <Icon name="Truck" size={14} className="text-slate-400" />
+                      <span>{trip.vehicle?.licensePlate || 'Fleet Vehicle'}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Driver: {trip.driver?.user?.username || 'Unassigned'} • {trip.vehicle?.model || 'Commercial'}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800 text-xs">
+                    <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                      <Icon name="Clock" size={13} className="text-emerald-500" />
+                      {etaInfo ? (
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          ETA {etaInfo.timeStr} (~{etaInfo.diffMin}m)
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">ETA Calculating...</span>
+                      )}
+                    </div>
+
+                    {isDelayed && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400 animate-pulse">
+                        <Icon name="AlertTriangle" size={11} />
+                        +{trip.delayMinutes}m
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* TRIPS LIST PREVIEW */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -381,35 +508,70 @@ const DispatcherDashboard = () => {
                   <th className="py-2.5 px-3">Driver</th>
                   <th className="py-2.5 px-3">Departure Time</th>
                   <th className="py-2.5 px-3">Distance</th>
-                  <th className="py-2.5 px-3">Status</th>
+                  <th className="py-2.5 px-3">Status / ETA</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {trips.slice(0, 8).map((trip) => (
-                  <tr key={trip.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="py-3 px-3 font-mono font-bold text-slate-900 dark:text-slate-100">
-                      #{trip.id}
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="font-mono font-semibold text-blue-600 dark:text-blue-400">
-                        {trip.vehicle?.licensePlate || 'N/A'}
-                      </div>
-                      <div className="text-[10px] text-slate-400">{trip.vehicle?.model}</div>
-                    </td>
-                    <td className="py-3 px-3 font-medium text-slate-800 dark:text-slate-200">
-                      {trip.driver?.user?.username || 'Unassigned'}
-                    </td>
-                    <td className="py-3 px-3 text-slate-500 dark:text-slate-400">
-                      {trip.startTime ? new Date(trip.startTime).toLocaleString() : 'N/A'}
-                    </td>
-                    <td className="py-3 px-3 font-medium text-slate-800 dark:text-slate-200">
-                      {trip.distanceCovered ? `${trip.distanceCovered.toFixed(1)} km` : '—'}
-                    </td>
-                    <td className="py-3 px-3">
-                      <StatusBadge status={trip.status} />
-                    </td>
-                  </tr>
-                ))}
+                {trips.slice(0, 8).map((trip) => {
+                  const formatEta = (isoString) => {
+                    if (!isoString) return null;
+                    try {
+                      const date = new Date(isoString);
+                      const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      const diffMs = date.getTime() - Date.now();
+                      const diffMin = Math.max(0, Math.round(diffMs / 60000));
+                      return `ETA ${timeStr} (~${diffMin}m)`;
+                    } catch {
+                      return null;
+                    }
+                  };
+                  const etaText = (trip.status === 'IN_PROGRESS' || trip.status === 'ACTIVE')
+                    ? formatEta(trip.estimatedArrivalTime)
+                    : null;
+                  const isDelayed = trip.delayMinutes != null && trip.delayMinutes > 0;
+
+                  return (
+                    <tr
+                      key={trip.id}
+                      onClick={() => navigate('/trips')}
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                    >
+                      <td className="py-3 px-3 font-mono font-bold text-slate-900 dark:text-slate-100">
+                        #{trip.id}
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-mono font-semibold text-blue-600 dark:text-blue-400">
+                          {trip.vehicle?.licensePlate || 'N/A'}
+                        </div>
+                        <div className="text-[10px] text-slate-400">{trip.vehicle?.model}</div>
+                      </td>
+                      <td className="py-3 px-3 font-medium text-slate-800 dark:text-slate-200">
+                        {trip.driver?.user?.username || 'Unassigned'}
+                      </td>
+                      <td className="py-3 px-3 text-slate-500 dark:text-slate-400">
+                        {trip.startTime ? new Date(trip.startTime).toLocaleString() : 'N/A'}
+                      </td>
+                      <td className="py-3 px-3 font-medium text-slate-800 dark:text-slate-200">
+                        {trip.distanceCovered ? `${trip.distanceCovered.toFixed(1)} km` : '—'}
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="flex flex-col gap-1 items-start">
+                          <StatusBadge status={trip.status} />
+                          {etaText && (
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                              {etaText}
+                            </span>
+                          )}
+                          {isDelayed && (
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">
+                              ⚠ +{trip.delayMinutes}m delay
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

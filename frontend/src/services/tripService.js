@@ -16,6 +16,11 @@ const tripService = {
     return response.data;
   },
 
+  getEta: async (id) => {
+    const response = await api.get(`/trips/${id}/eta`);
+    return response.data;
+  },
+
   start: async (data) => {
     const response = await api.post('/trips/start', data);
     return response.data;

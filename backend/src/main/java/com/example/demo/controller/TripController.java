@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.TripEtaDto;
 import com.example.demo.entity.Trip;
 import com.example.demo.service.TripService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -81,13 +82,19 @@ public class TripController {
     @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<Trip> startTrip(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "JSON payload containing vehicleId and driverId",
+                    description = "JSON payload containing vehicleId, driverId, and optional origin/destination coordinates",
                     required = true
             )
-            @RequestBody Map<String, Long> request) {
-        Long vehicleId = request.get("vehicleId");
-        Long driverId = request.get("driverId");
-        Trip startedTrip = tripService.startTrip(vehicleId, driverId);
+            @RequestBody Map<String, Object> request) {
+        Long vehicleId = Long.valueOf(request.get("vehicleId").toString());
+        Long driverId = Long.valueOf(request.get("driverId").toString());
+        Double originLat = request.get("originLat") != null ? Double.valueOf(request.get("originLat").toString()) : null;
+        Double originLng = request.get("originLng") != null ? Double.valueOf(request.get("originLng").toString()) : null;
+        Double destinationLat = request.get("destinationLat") != null ? Double.valueOf(request.get("destinationLat").toString()) : null;
+        Double destinationLng = request.get("destinationLng") != null ? Double.valueOf(request.get("destinationLng").toString()) : null;
+        LocalDateTime scheduledEndTime = request.get("scheduledEndTime") != null ? LocalDateTime.parse(request.get("scheduledEndTime").toString()) : null;
+
+        Trip startedTrip = tripService.startTrip(vehicleId, driverId, originLat, originLng, destinationLat, destinationLng, scheduledEndTime);
         return new ResponseEntity<>(startedTrip, HttpStatus.CREATED);
     }
 
@@ -147,14 +154,20 @@ public class TripController {
     @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
     public ResponseEntity<Trip> scheduleTrip(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "JSON payload containing vehicleId, driverId, and scheduledTime (ISO format)",
+                    description = "JSON payload containing vehicleId, driverId, scheduledTime (ISO format), and optional coordinates",
                     required = true
             )
             @RequestBody Map<String, Object> request) {
         Long vehicleId = Long.valueOf(request.get("vehicleId").toString());
         Long driverId = Long.valueOf(request.get("driverId").toString());
         LocalDateTime scheduledTime = LocalDateTime.parse(request.get("scheduledTime").toString());
-        Trip scheduledTrip = tripService.scheduleTrip(vehicleId, driverId, scheduledTime);
+        Double originLat = request.get("originLat") != null ? Double.valueOf(request.get("originLat").toString()) : null;
+        Double originLng = request.get("originLng") != null ? Double.valueOf(request.get("originLng").toString()) : null;
+        Double destinationLat = request.get("destinationLat") != null ? Double.valueOf(request.get("destinationLat").toString()) : null;
+        Double destinationLng = request.get("destinationLng") != null ? Double.valueOf(request.get("destinationLng").toString()) : null;
+        LocalDateTime scheduledEndTime = request.get("scheduledEndTime") != null ? LocalDateTime.parse(request.get("scheduledEndTime").toString()) : null;
+
+        Trip scheduledTrip = tripService.scheduleTrip(vehicleId, driverId, scheduledTime, originLat, originLng, destinationLat, destinationLng, scheduledEndTime);
         return new ResponseEntity<>(scheduledTrip, HttpStatus.CREATED);
     }
 
@@ -195,5 +208,23 @@ public class TripController {
             @PathVariable Long id) {
         Trip trip = tripService.getTripById(id);
         return ResponseEntity.ok(trip);
+    }
+
+    @Operation(
+            summary = "Get Trip live ETA and delay status",
+            description = "Calculates or retrieves live ETA, delay minutes, and remaining distance in kilometers."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved trip ETA details"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid JWT bearer token"),
+            @ApiResponse(responseCode = "404", description = "Trip not found")
+    })
+    @GetMapping("/{id}/eta")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TripEtaDto> getTripEta(
+            @Parameter(name = "id", description = "Trip Database ID", example = "1")
+            @PathVariable Long id) {
+        TripEtaDto etaDto = tripService.getTripEta(id);
+        return ResponseEntity.ok(etaDto);
     }
 }

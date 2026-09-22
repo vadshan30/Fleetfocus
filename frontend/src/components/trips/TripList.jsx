@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import tripService from '../../services/tripService';
+import websocketService from '../../services/websocketService';
 import TripForm from './TripForm';
 import ScheduleTripForm from './ScheduleTripForm';
 import { exportToCSV } from '../../utils/exportUtils';
@@ -35,6 +36,29 @@ const TripList = () => {
 
   useEffect(() => {
     fetchTrips();
+
+    const unsubscribeTrips = websocketService.subscribe('/topic/trips', (data) => {
+      if (!data || !data.tripId) return;
+      setTrips((prev) =>
+        prev.map((t) => {
+          if (t.id === data.tripId) {
+            return {
+              ...t,
+              status: data.status || (data.type === 'TRIP_STARTED' ? 'IN_PROGRESS' : (data.type === 'TRIP_COMPLETED' ? 'COMPLETED' : t.status)),
+              actualStartTime: data.actualStartTime || t.actualStartTime,
+              actualEndTime: data.actualEndTime || t.actualEndTime,
+              estimatedArrivalTime: data.estimatedArrivalTime !== undefined ? data.estimatedArrivalTime : t.estimatedArrivalTime,
+              delayMinutes: data.delayMinutes !== undefined ? data.delayMinutes : t.delayMinutes,
+            };
+          }
+          return t;
+        })
+      );
+    });
+
+    return () => {
+      unsubscribeTrips();
+    };
   }, []);
 
   const handleEndTrip = async (id) => {
@@ -206,9 +230,46 @@ const TripList = () => {
       ),
     },
     {
-      header: 'Status',
+      header: 'Status & Live ETA',
       accessor: 'status',
-      render: (row) => <StatusBadge status={row.status} />,
+      render: (row) => {
+        const formatEta = (isoString) => {
+          if (!isoString) return null;
+          try {
+            const date = new Date(isoString);
+            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const diffMs = date.getTime() - Date.now();
+            const diffMin = Math.max(0, Math.round(diffMs / 60000));
+            return `ETA ${timeStr} (~${diffMin} min)`;
+          } catch {
+            return null;
+          }
+        };
+
+        const etaBadgeText = (row.status === 'IN_PROGRESS' || row.status === 'ACTIVE')
+          ? formatEta(row.estimatedArrivalTime)
+          : null;
+
+        const isDelayed = row.delayMinutes != null && row.delayMinutes > 0;
+
+        return (
+          <div className="flex flex-col gap-1 items-start">
+            <StatusBadge status={row.status} />
+            {etaBadgeText && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                <Icon name="Clock" size={11} className="text-blue-500" />
+                {etaBadgeText}
+              </span>
+            )}
+            {isDelayed && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 animate-pulse">
+                <Icon name="AlertTriangle" size={11} className="text-amber-500" />
+                ⚠ Delayed {row.delayMinutes} min
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: 'Distance Covered',

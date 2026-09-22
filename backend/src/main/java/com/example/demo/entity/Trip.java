@@ -32,6 +32,36 @@ public class Trip {
     @Column(name = "distance_covered")
     private Double distanceCovered = 0.0;
 
+    @Column(name = "origin_lat")
+    private Double originLat;
+
+    @Column(name = "origin_lng")
+    private Double originLng;
+
+    @Column(name = "destination_lat")
+    private Double destinationLat;
+
+    @Column(name = "destination_lng")
+    private Double destinationLng;
+
+    @Column(name = "actual_start_time")
+    private LocalDateTime actualStartTime;
+
+    @Column(name = "actual_end_time")
+    private LocalDateTime actualEndTime;
+
+    @Column(name = "scheduled_start_time")
+    private LocalDateTime scheduledStartTime;
+
+    @Column(name = "scheduled_end_time")
+    private LocalDateTime scheduledEndTime;
+
+    @Column(name = "estimated_arrival_time")
+    private LocalDateTime estimatedArrivalTime;
+
+    @Column(name = "delay_minutes")
+    private Integer delayMinutes = 0;
+
     public Trip() {
     }
 
@@ -39,6 +69,7 @@ public class Trip {
         this.vehicle = vehicle;
         this.driver = driver;
         this.startTime = LocalDateTime.now();
+        this.scheduledStartTime = this.startTime;
         this.status = TripStatus.IN_PROGRESS;
         this.distanceCovered = 0.0;
     }
@@ -48,6 +79,7 @@ public class Trip {
         this.vehicle = vehicle;
         this.driver = null;
         this.startTime = LocalDateTime.now();
+        this.scheduledStartTime = this.startTime;
         this.status = TripStatus.IN_PROGRESS;
         this.distanceCovered = 0.0;
     }
@@ -56,6 +88,7 @@ public class Trip {
         this.vehicle = vehicle;
         this.driver = driver;
         this.startTime = startTime;
+        this.scheduledStartTime = startTime;
         this.status = status;
         this.distanceCovered = 0.0;
     }
@@ -65,6 +98,7 @@ public class Trip {
         this.vehicle = vehicle;
         this.driver = driver;
         this.startTime = startTime;
+        this.scheduledStartTime = startTime;
         this.status = status;
         this.distanceCovered = 0.0;
     }
@@ -123,5 +157,85 @@ public class Trip {
 
     public void setDistanceCovered(Double distanceCovered) {
         this.distanceCovered = distanceCovered;
+    }
+
+    public Double getOriginLat() {
+        return originLat;
+    }
+
+    public void setOriginLat(Double originLat) {
+        this.originLat = originLat;
+    }
+
+    public Double getOriginLng() {
+        return originLng;
+    }
+
+    public void setOriginLng(Double originLng) {
+        this.originLng = originLng;
+    }
+
+    public Double getDestinationLat() {
+        return destinationLat;
+    }
+
+    public void setDestinationLat(Double destinationLat) {
+        this.destinationLat = destinationLat;
+    }
+
+    public Double getDestinationLng() {
+        return destinationLng;
+    }
+
+    public void setDestinationLng(Double destinationLng) {
+        this.destinationLng = destinationLng;
+    }
+
+    public LocalDateTime getActualStartTime() {
+        return actualStartTime;
+    }
+
+    public void setActualStartTime(LocalDateTime actualStartTime) {
+        this.actualStartTime = actualStartTime;
+    }
+
+    public LocalDateTime getActualEndTime() {
+        return actualEndTime;
+    }
+
+    public void setActualEndTime(LocalDateTime actualEndTime) {
+        this.actualEndTime = actualEndTime;
+    }
+
+    public LocalDateTime getScheduledStartTime() {
+        return scheduledStartTime;
+    }
+
+    public void setScheduledStartTime(LocalDateTime scheduledStartTime) {
+        this.scheduledStartTime = scheduledStartTime;
+    }
+
+    public LocalDateTime getScheduledEndTime() {
+        return scheduledEndTime;
+    }
+
+    public void setScheduledEndTime(LocalDateTime scheduledEndTime) {
+        this.scheduledEndTime = scheduledEndTime;
+    }
+
+    public LocalDateTime getEstimatedArrivalTime() {
+        return estimatedArrivalTime;
+    }
+
+    public void setEstimatedArrivalTime(LocalDateTime estimatedArrivalTime) {
+        this.estimatedArrivalTime = estimatedArrivalTime;
+    }
+
+    public Integer getDelayMinutes() {
+        return delayMinutes;
+    }
+
+    public void setDelayMinutes(Integer delayMinutes) {
+        this.delayMinutes = delayMinutes;
     }
 }

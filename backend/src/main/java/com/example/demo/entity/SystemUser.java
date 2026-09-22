@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,10 +21,11 @@ public class SystemUser implements UserDetails {
     private String username;
 
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(unique = true, nullable = false)
-    private String email;  // ← ADD THIS
+    private String email;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

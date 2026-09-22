@@ -4,6 +4,7 @@ import useAuth from '../../hooks/useAuth';
 import tripService from '../../services/tripService';
 import alertService from '../../services/alertService';
 import monitoringService from '../../services/monitoringService';
+import websocketService from '../../services/websocketService';
 
 // UI Components
 import StatCard from '../ui/StatCard';
@@ -19,6 +20,7 @@ const DriverDashboard = () => {
   const [vehicle, setVehicle] = useState(null);
   const [telemetry, setTelemetry] = useState(null);
   const [alerts, setAlerts] = useState([]);
+  const [tripEta, setTripEta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -37,6 +39,17 @@ const DriverDashboard = () => {
       const latestTrip = activeTrip || tripsList[0];
       const assignedVehicle = latestTrip?.vehicle || null;
       setVehicle(assignedVehicle);
+
+      if (activeTrip) {
+        try {
+          const eta = await tripService.getEta(activeTrip.id);
+          setTripEta(eta);
+        } catch (e) {
+          console.warn('Could not load ETA for active trip:', e);
+        }
+      } else {
+        setTripEta(null);
+      }
 
       if (assignedVehicle) {
         // Fetch live telemetry safely
@@ -87,6 +100,15 @@ const DriverDashboard = () => {
 
   useEffect(() => {
     loadDriverData();
+
+    const unsubscribeTrips = websocketService.subscribe('/topic/trips', (data) => {
+      if (!data) return;
+      loadDriverData();
+    });
+
+    return () => {
+      unsubscribeTrips();
+    };
   }, [loadDriverData, user?.username]);
 
   const activeTrip = trips.find((t) => t.status === 'IN_PROGRESS');
@@ -228,13 +250,66 @@ const DriverDashboard = () => {
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-500 dark:text-slate-400">Started At:</span>
                   <span className="text-slate-700 dark:text-slate-300">
-                    {activeTrip.startTime ? new Date(activeTrip.startTime).toLocaleString() : 'N/A'}
+                    {activeTrip.actualStartTime ? new Date(activeTrip.actualStartTime).toLocaleString() : (activeTrip.startTime ? new Date(activeTrip.startTime).toLocaleString() : 'N/A')}
                   </span>
                 </div>
                 {activeTrip.distanceCovered > 0 && (
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-slate-500 dark:text-slate-400">Distance Logged:</span>
                     <span className="font-bold text-emerald-600">{activeTrip.distanceCovered.toFixed(1)} km</span>
+                  </div>
+                )}
+              </div>
+
+              {/* LIVE ETA & DESTINATION TRACKING */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+                <div className="flex items-center justify-between text-xs flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <Icon name="Clock" size={14} />
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-slate-400">Live Arrival Estimate</div>
+                      <div className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                        {tripEta?.estimatedArrivalTime ? (
+                          (() => {
+                            const date = new Date(tripEta.estimatedArrivalTime);
+                            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const diffMin = Math.max(0, Math.round((date.getTime() - Date.now()) / 60000));
+                            return `Your ETA: ${timeStr} (~${diffMin} min)`;
+                          })()
+                        ) : activeTrip.estimatedArrivalTime ? (
+                          (() => {
+                            const date = new Date(activeTrip.estimatedArrivalTime);
+                            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const diffMin = Math.max(0, Math.round((date.getTime() - Date.now()) / 60000));
+                            return `Your ETA: ${timeStr} (~${diffMin} min)`;
+                          })()
+                        ) : (
+                          'Calculating ETA live...'
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {tripEta?.remainingKm != null && (
+                    <div className="text-right">
+                      <div className="text-[10px] uppercase font-bold text-slate-400">Remaining</div>
+                      <div className="font-bold text-xs text-blue-600 dark:text-blue-400">
+                        You are {tripEta.remainingKm.toFixed(1)} km from destination
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Delay Warning */}
+                {((tripEta?.delayMinutes != null && tripEta.delayMinutes > 0) ||
+                  (activeTrip.delayMinutes != null && activeTrip.delayMinutes > 0)) && (
+                  <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2 animate-pulse">
+                    <Icon name="AlertTriangle" size={15} className="text-amber-600 shrink-0" />
+                    <span>
+                      <strong>Warning:</strong> Trip delayed by ~{tripEta?.delayMinutes || activeTrip.delayMinutes} min past scheduled arrival time.
+                    </span>
                   </div>
                 )}
               </div>

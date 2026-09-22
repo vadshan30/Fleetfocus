@@ -1,9 +1,11 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.TelemetryData;
+import com.example.demo.entity.Trip;
 import com.example.demo.entity.Vehicle;
 import com.example.demo.entity.VehicleStatus;
 import com.example.demo.repository.TelemetryDataRepository;
+import com.example.demo.repository.TripRepository;
 import com.example.demo.repository.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -29,6 +31,12 @@ public class TelemetrySimulator {
 
     @Autowired
     private AlertRuleService alertRuleService;
+
+    @Autowired
+    private TripRepository tripRepository;
+
+    @Autowired
+    private TripAutomationService tripAutomationService;
 
     private final Random random = new Random();
 
@@ -82,6 +90,12 @@ public class TelemetrySimulator {
             alertRuleService.evaluate(telemetry)
                     .ifPresent(rule -> alertRuleService.broadcastAlert(telemetry, rule,
                             alertRuleService.buildMessage(telemetry, rule)));
+
+            // Evaluate trip lifecycle automation for active trips matching this vehicle
+            List<Trip> activeTrips = tripRepository.findActiveByVehicleId(vehicle.getId());
+            for (Trip trip : activeTrips) {
+                tripAutomationService.evaluateTrip(telemetry, trip);
+            }
         }
         
         System.out.println("✅ Telemetry generated for " + vehicles.size() + " vehicles");
