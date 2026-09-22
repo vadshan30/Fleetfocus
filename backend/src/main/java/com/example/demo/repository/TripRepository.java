@@ -36,4 +36,19 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
            "AND t.status IN (com.example.demo.entity.TripStatus.SCHEDULED, com.example.demo.entity.TripStatus.IN_PROGRESS) " +
            "ORDER BY t.scheduledStartTime ASC")
     List<Trip> findActiveByDriverUsername(@Param("username") String username);
+
+    @Query("SELECT COUNT(t) FROM Trip t WHERE t.status = com.example.demo.entity.TripStatus.COMPLETED " +
+           "AND ((t.actualStartTime IS NOT NULL AND t.actualStartTime >= :start AND t.actualStartTime <= :end) " +
+           "OR (t.actualStartTime IS NULL AND t.startTime >= :start AND t.startTime <= :end))")
+    Long countCompletedBetween(@Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
+
+    @Query("SELECT COALESCE(SUM(t.distanceCovered), 0.0) FROM Trip t WHERE t.status = com.example.demo.entity.TripStatus.COMPLETED " +
+           "AND ((t.actualStartTime IS NOT NULL AND t.actualStartTime >= :start AND t.actualStartTime <= :end) " +
+           "OR (t.actualStartTime IS NULL AND t.startTime >= :start AND t.startTime <= :end))")
+    Double sumDistanceBetween(@Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
+
+    @Query("SELECT COUNT(DISTINCT t.vehicle.id) FROM Trip t WHERE " +
+           "((t.actualStartTime IS NOT NULL AND t.actualStartTime <= :end) OR (t.actualStartTime IS NULL AND t.startTime <= :end)) " +
+           "AND ((t.actualEndTime IS NOT NULL AND t.actualEndTime >= :start) OR (t.actualEndTime IS NULL AND t.status = com.example.demo.entity.TripStatus.IN_PROGRESS))")
+    Long countActiveVehiclesBetween(@Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
 }

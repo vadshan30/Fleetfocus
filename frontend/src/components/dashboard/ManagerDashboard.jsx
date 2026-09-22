@@ -5,6 +5,7 @@ import { fetchVehicles } from '../../store/slices/vehicleSlice';
 import tripService from '../../services/tripService';
 import driverService from '../../services/driverService';
 import maintenanceService from '../../services/maintenanceService';
+import analyticsService from '../../services/analyticsService';
 import DriverPerformance from './DriverPerformance';
 import { parseISO, isWithinInterval, startOfDay, endOfDay, subDays, format } from 'date-fns';
 
@@ -17,7 +18,7 @@ import Icon from '../ui/Icon';
 import FleetUtilizationChart from '../analytics/FleetUtilizationChart';
 import DriverComparisonChart from '../analytics/DriverComparisonChart';
 import CostBreakdownChart from '../analytics/CostBreakdownChart';
-import DateRangeFilter from '../analytics/DateRangeFilter';
+import DateRangeFilter, { calculatePrecedingRange } from '../analytics/DateRangeFilter';
 import TripHeatmap from '../analytics/TripHeatmap';
 
 const ManagerDashboard = () => {
@@ -32,6 +33,10 @@ const ManagerDashboard = () => {
   const [hoveredSegment, setHoveredSegment] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Phase 3.9 Multi-Period Comparison State
+  const [compareMode, setCompareMode] = useState(false);
+  const [comparisonData, setComparisonData] = useState(null);
+
   const [dateRange, setDateRange] = useState(() => {
     const end = endOfDay(new Date());
     const start = startOfDay(subDays(end, 29));
@@ -40,6 +45,11 @@ const ManagerDashboard = () => {
       endDate: format(end, 'yyyy-MM-dd'),
     };
   });
+
+  const [rangeB, setRangeB] = useState(() => calculatePrecedingRange({
+    startDate: format(startOfDay(subDays(new Date(), 29)), 'yyyy-MM-dd'),
+    endDate: format(endOfDay(new Date()), 'yyyy-MM-dd'),
+  }));
 
   useEffect(() => {
     if (!user) return;
@@ -57,6 +67,25 @@ const ManagerDashboard = () => {
     });
   }, [dispatch, user]);
 
+  // Fetch comparison analytics whenever compareMode is active or ranges change
+  useEffect(() => {
+    if (!compareMode || !dateRange?.startDate || !dateRange?.endDate || !rangeB?.startDate || !rangeB?.endDate) {
+      setComparisonData(null);
+      return;
+    }
+    analyticsService
+      .compare(
+        { start: dateRange.startDate, end: dateRange.endDate },
+        { start: rangeB.startDate, end: rangeB.endDate }
+      )
+      .then((res) => {
+        setComparisonData(res);
+      })
+      .catch((err) => {
+        console.error('Failed to load comparison analytics', err);
+      });
+  }, [compareMode, dateRange, rangeB]);
+
   const filteredTrips = useMemo(() => {
     if (!dateRange.startDate || !dateRange.endDate) return trips;
     const start = startOfDay(parseISO(dateRange.startDate));
@@ -72,19 +101,66 @@ const ManagerDashboard = () => {
     });
   }, [trips, dateRange]);
 
+  const filteredTripsB = useMemo(() => {
+    if (!compareMode || !rangeB?.startDate || !rangeB?.endDate) return [];
+    const start = startOfDay(parseISO(rangeB.startDate));
+    const end = endOfDay(parseISO(rangeB.endDate));
+    return trips.filter((t) => {
+      if (!t.startTime) return false;
+      try {
+        const tripStart = parseISO(t.startTime);
+        return isWithinInterval(tripStart, { start, end });
+      } catch {
+        return false;
+      }
+    });
+  }, [trips, rangeB, compareMode]);
+
+  const filteredMaintenanceLogsB = useMemo(() => {
+    if (!compareMode || !rangeB?.startDate || !rangeB?.endDate) return [];
+    const start = startOfDay(parseISO(rangeB.startDate));
+    const end = endOfDay(parseISO(rangeB.endDate));
+    return maintenanceLogs.filter((l) => {
+      const dateStr = l.serviceDate || l.createdAt;
+      if (!dateStr) return false;
+      try {
+        const d = parseISO(dateStr);
+        return isWithinInterval(d, { start, end });
+      } catch {
+        return false;
+      }
+    });
+  }, [maintenanceLogs, rangeB, compareMode]);
+
+  const rangeALabel = useMemo(() => {
+    if (comparisonData?.rangeALabel) return comparisonData.rangeALabel;
+    if (dateRange?.startDate && dateRange?.endDate) {
+      return `${format(parseISO(dateRange.startDate), 'MMM d')} – ${format(parseISO(dateRange.endDate), 'MMM d')}`;
+    }
+    return 'Range A';
+  }, [comparisonData, dateRange]);
+
+  const rangeBLabel = useMemo(() => {
+    if (comparisonData?.rangeBLabel) return comparisonData.rangeBLabel;
+    if (rangeB?.startDate && rangeB?.endDate) {
+      return `${format(parseISO(rangeB.startDate), 'MMM d')} – ${format(parseISO(rangeB.endDate), 'MMM d')}`;
+    }
+    return 'Range B';
+  }, [comparisonData, rangeB]);
+
   const totalVehicles = vehicles.length;
   const onTrip = vehicles.filter((v) => v.status === 'ON_TRIP').length;
   const maintenance = vehicles.filter((v) => v.status === 'UNDER_MAINTENANCE' || v.status === 'MAINTENANCE').length;
   const available = vehicles.filter((v) => v.status === 'AVAILABLE').length;
 
-  const completedTrips = trips.filter((t) => t.status === 'COMPLETED');
+  const completedTrips = filteredTrips.filter((t) => t.status === 'COMPLETED');
   const totalTripDistance = completedTrips.reduce((s, t) => s + (t.distanceCovered || 0), 0);
   const avgFuel = 8.5;
   const fuelUsed = (totalTripDistance / 100) * avgFuel;
   const fuelCost = fuelUsed * 1.8;
 
   const vehicleTripCounts = {};
-  trips.forEach((t) => {
+  filteredTrips.forEach((t) => {
     const plate = t.vehicle?.licensePlate;
     if (plate) vehicleTripCounts[plate] = (vehicleTripCounts[plate] || 0) + 1;
   });
@@ -137,10 +213,17 @@ const ManagerDashboard = () => {
               Real-Time Fleet Operations
             </h1>
             <p className="mt-1 text-slate-300 text-xs sm:text-sm max-w-xl">
-              Track live telemetry, dispatch vehicles, analyze driver safety metrics, and manage fleet maintenance.
+              Track live telemetry, dispatch vehicles, analyze driver safety metrics, and compare multi-period operational trends.
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3 shrink-0 flex-wrap">
+            <button
+              onClick={() => navigate('/analytics')}
+              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2"
+            >
+              <Icon name="BarChart2" size={16} />
+              <span>Full Analytics</span>
+            </button>
             <button
               onClick={() => navigate('/live-fleet')}
               className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2"
@@ -159,10 +242,18 @@ const ManagerDashboard = () => {
         </div>
       </div>
 
-      {/* DATE RANGE FILTER */}
-      <DateRangeFilter value={dateRange} onChange={setDateRange} isLoading={isLoading} />
+      {/* DATE RANGE FILTER WITH COMPARISON MODE */}
+      <DateRangeFilter
+        value={dateRange}
+        onChange={setDateRange}
+        isLoading={isLoading}
+        compareMode={compareMode}
+        onCompareModeChange={setCompareMode}
+        rangeB={rangeB}
+        onRangeBChange={setRangeB}
+      />
 
-      {/* KPI CARDS */}
+      {/* KPI CARDS WITH DELTAS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
         <div className="cursor-pointer h-full" onClick={() => navigate('/vehicles')}>
           <StatCard
@@ -177,6 +268,11 @@ const ManagerDashboard = () => {
               totalVehicles > 0
                 ? { value: '+1', direction: 'up' }
                 : { value: '0%', direction: 'neutral' }
+            }
+            delta={
+              compareMode && comparisonData?.utilizationDelta
+                ? { ...comparisonData.utilizationDelta, label: rangeBLabel }
+                : null
             }
           />
         </div>
@@ -194,6 +290,11 @@ const ManagerDashboard = () => {
                 ? { value: '+12%', direction: 'up' }
                 : { value: '0%', direction: 'neutral' }
             }
+            delta={
+              compareMode && comparisonData?.tripsDelta
+                ? { ...comparisonData.tripsDelta, label: rangeBLabel }
+                : null
+            }
           />
         </div>
         <div className="cursor-pointer h-full" onClick={() => navigate('/maintenance')}>
@@ -210,6 +311,11 @@ const ManagerDashboard = () => {
                 ? { value: '-5%', direction: 'down' }
                 : { value: '0%', direction: 'neutral' }
             }
+            delta={
+              compareMode && comparisonData?.costDelta
+                ? { ...comparisonData.costDelta, invertColor: true, label: rangeBLabel }
+                : null
+            }
           />
         </div>
         <div className="cursor-pointer h-full" onClick={() => navigate('/vehicles')}>
@@ -225,6 +331,11 @@ const ManagerDashboard = () => {
               available > 0
                 ? { value: '+3%', direction: 'up' }
                 : { value: '0%', direction: 'neutral' }
+            }
+            delta={
+              compareMode && comparisonData?.utilizationDelta
+                ? { ...comparisonData.utilizationDelta, label: rangeBLabel }
+                : null
             }
           />
         </div>
@@ -302,7 +413,7 @@ const ManagerDashboard = () => {
                   Top Performing Vehicles
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Ranked by completed trip volume
+                  Ranked by completed trip volume in range
                 </p>
               </div>
             </div>
@@ -313,7 +424,7 @@ const ManagerDashboard = () => {
 
           {topVehicles.length === 0 ? (
             <div className="py-12 text-center text-slate-400 text-xs">
-              No completed trips recorded yet.
+              No completed trips recorded in selected range.
             </div>
           ) : (
             <div className="space-y-2.5 flex-1">
@@ -363,24 +474,54 @@ const ManagerDashboard = () => {
         </div>
       </div>
 
-      {/* FLEET UTILIZATION CHART */}
-      <FleetUtilizationChart trips={filteredTrips} vehicles={vehicles} />
+      {/* FLEET UTILIZATION CHART (4-Line in compareMode) */}
+      <FleetUtilizationChart
+        trips={filteredTrips}
+        tripsB={filteredTripsB}
+        vehicles={vehicles}
+        compareMode={compareMode}
+        rangeA={dateRange}
+        rangeB={rangeB}
+        rangeALabel={rangeALabel}
+        rangeBLabel={rangeBLabel}
+      />
 
-      {/* DRIVER COMPARISON CHART */}
-      <DriverComparisonChart drivers={drivers} trips={filteredTrips} />
+      {/* DRIVER COMPARISON CHART (Side-by-Side in compareMode) */}
+      <DriverComparisonChart
+        drivers={drivers}
+        trips={filteredTrips}
+        tripsB={filteredTripsB}
+        compareMode={compareMode}
+        rangeALabel={rangeALabel}
+        rangeBLabel={rangeBLabel}
+      />
 
-      {/* COST BREAKDOWN CHART */}
-      <CostBreakdownChart trips={filteredTrips} maintenanceLogs={maintenanceLogs} />
+      {/* COST BREAKDOWN CHART (Dual Donut in compareMode) */}
+      <CostBreakdownChart
+        trips={filteredTrips}
+        tripsB={filteredTripsB}
+        maintenanceLogs={maintenanceLogs}
+        maintenanceLogsB={filteredMaintenanceLogsB}
+        compareMode={compareMode}
+        rangeALabel={rangeALabel}
+        rangeBLabel={rangeBLabel}
+      />
 
-      {/* TRIP HEATMAP */}
-      <TripHeatmap trips={filteredTrips} />
+      {/* TRIP HEATMAP (Diff view in compareMode) */}
+      <TripHeatmap
+        trips={filteredTrips}
+        tripsB={filteredTripsB}
+        compareMode={compareMode}
+        rangeALabel={rangeALabel}
+        rangeBLabel={rangeBLabel}
+      />
 
       {/* DRIVER PERFORMANCE COMPONENT */}
       <DriverPerformance trips={filteredTrips} drivers={drivers} />
 
       {/* FUEL & EFFICIENCY ANALYTICS */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800 flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <Icon name="Fuel" size={18} />
@@ -393,11 +534,12 @@ const ManagerDashboard = () => {
                 {completedTrips.length > 0
                   ? `${completedTrips.length} completed trips analyzed`
                   : 'Complete trips to generate fuel analytics'}
+                {compareMode && ` • Comparing with ${rangeBLabel}`}
               </p>
             </div>
           </div>
           <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-            This Month
+            {rangeALabel}
           </span>
         </div>
 
@@ -407,9 +549,22 @@ const ManagerDashboard = () => {
               <span>Total Distance</span>
               <Icon name="MapPin" size={14} className="text-blue-500" />
             </div>
-            <div className="text-xl font-bold text-slate-900 dark:text-slate-50">
-              {totalTripDistance.toFixed(0)}{' '}
-              <span className="text-xs font-normal text-slate-400">km</span>
+            <div className="flex items-baseline gap-2">
+              <div className="text-xl font-bold text-slate-900 dark:text-slate-50">
+                {totalTripDistance.toFixed(0)}{' '}
+                <span className="text-xs font-normal text-slate-400">km</span>
+              </div>
+              {compareMode && comparisonData?.distanceDelta && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  comparisonData.distanceDelta.direction === 'UP'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    : comparisonData.distanceDelta.direction === 'DOWN'
+                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                    : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {comparisonData.distanceDelta.direction === 'UP' ? `+${comparisonData.distanceDelta.percentChange.toFixed(1)}%` : `${comparisonData.distanceDelta.percentChange.toFixed(1)}%`}
+                </span>
+              )}
             </div>
             <div className="text-[10px] text-slate-400 mt-1">From {completedTrips.length} completed trips</div>
           </div>
@@ -419,9 +574,22 @@ const ManagerDashboard = () => {
               <span>Estimated Fuel Used</span>
               <Icon name="Fuel" size={14} className="text-amber-500" />
             </div>
-            <div className="text-xl font-bold text-slate-900 dark:text-slate-50">
-              {fuelUsed.toFixed(1)}{' '}
-              <span className="text-xs font-normal text-slate-400">L</span>
+            <div className="flex items-baseline gap-2">
+              <div className="text-xl font-bold text-slate-900 dark:text-slate-50">
+                {fuelUsed.toFixed(1)}{' '}
+                <span className="text-xs font-normal text-slate-400">L</span>
+              </div>
+              {compareMode && comparisonData?.fuelDelta && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  comparisonData.fuelDelta.direction === 'UP'
+                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                    : comparisonData.fuelDelta.direction === 'DOWN'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {comparisonData.fuelDelta.direction === 'UP' ? `+${comparisonData.fuelDelta.percentChange.toFixed(1)}%` : `${comparisonData.fuelDelta.percentChange.toFixed(1)}%`}
+                </span>
+              )}
             </div>
             <div className="text-[10px] text-slate-400 mt-1">{avgFuel} L/100km avg rate</div>
           </div>
@@ -431,8 +599,21 @@ const ManagerDashboard = () => {
               <span>Est. Fuel Cost</span>
               <Icon name="DollarSign" size={14} className="text-emerald-500" />
             </div>
-            <div className="text-xl font-bold text-slate-900 dark:text-slate-50">
-              ${fuelCost.toFixed(2)}
+            <div className="flex items-baseline gap-2">
+              <div className="text-xl font-bold text-slate-900 dark:text-slate-50">
+                ${fuelCost.toFixed(2)}
+              </div>
+              {compareMode && comparisonData?.costDelta && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  comparisonData.costDelta.direction === 'UP'
+                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                    : comparisonData.costDelta.direction === 'DOWN'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {comparisonData.costDelta.direction === 'UP' ? `+${comparisonData.costDelta.percentChange.toFixed(1)}%` : `${comparisonData.costDelta.percentChange.toFixed(1)}%`}
+                </span>
+              )}
             </div>
             <div className="text-[10px] text-slate-400 mt-1">$1.80 / Liter avg</div>
           </div>
@@ -442,8 +623,21 @@ const ManagerDashboard = () => {
               <span>Total Dispatches</span>
               <Icon name="Route" size={14} className="text-purple-500" />
             </div>
-            <div className="text-xl font-bold text-slate-900 dark:text-slate-50">
-              {trips.length}
+            <div className="flex items-baseline gap-2">
+              <div className="text-xl font-bold text-slate-900 dark:text-slate-50">
+                {filteredTrips.length}
+              </div>
+              {compareMode && comparisonData?.tripsDelta && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  comparisonData.tripsDelta.direction === 'UP'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    : comparisonData.tripsDelta.direction === 'DOWN'
+                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                    : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {comparisonData.tripsDelta.direction === 'UP' ? `+${comparisonData.tripsDelta.percentChange.toFixed(1)}%` : `${comparisonData.tripsDelta.percentChange.toFixed(1)}%`}
+                </span>
+              )}
             </div>
             <div className="text-[10px] text-slate-400 mt-1">{completedTrips.length} completed</div>
           </div>

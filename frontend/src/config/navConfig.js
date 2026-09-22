@@ -24,6 +24,12 @@ export const NAV_ITEMS = [
     roles: ['FLEET_MANAGER', 'DISPATCHER'],
   },
   {
+    path: '/analytics',
+    label: 'Analytics',
+    icon: 'BarChart2',
+    roles: ['FLEET_MANAGER', 'DISPATCHER'],
+  },
+  {
     path: '/my-trips',
     label: 'My Trips',
     icon: 'MapPin',

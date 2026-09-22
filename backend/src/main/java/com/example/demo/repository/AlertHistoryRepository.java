@@ -58,6 +58,8 @@ public interface AlertHistoryRepository extends JpaRepository<AlertHistory, Long
 
     long countByOccurredAtAfter(LocalDateTime cutoff);
 
+    long countByOccurredAtBetween(LocalDateTime start, LocalDateTime end);
+
     // Server-side pagination with filters
     @Query("SELECT a FROM AlertHistory a WHERE " +
            "(:acknowledged IS NULL OR a.acknowledged = :acknowledged) AND " +

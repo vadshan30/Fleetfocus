@@ -22,28 +22,52 @@ const SkeletonBar = ({ index, count }) => (
   </div>
 );
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, compareMode }) => {
   if (!active || !payload) return null;
 
   return (
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-3 min-w-[160px]">
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">{label}</p>
+      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 mb-2">{label}</p>
       {payload.map((entry, index) => (
-        <div key={index} className="flex items-center gap-2 text-sm">
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-slate-700 dark:text-slate-200 capitalize">
-            {entry.name}:{' '}
-          </span>
-          <span className="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
+        <div key={index} className="flex items-center justify-between gap-3 text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+            <span className="text-slate-700 dark:text-slate-300 capitalize text-xs">
+              {entry.name}:
+            </span>
+          </div>
+          <span className="font-semibold text-slate-900 dark:text-slate-100 tabular-nums text-xs">
             {entry.value}
           </span>
         </div>
       ))}
+      {compareMode && payload.length >= 2 && (
+        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700/60 text-xs flex justify-between items-center">
+          <span className="text-slate-500 dark:text-slate-400">Change:</span>
+          {(() => {
+            const diff = (payload[0]?.value || 0) - (payload[1]?.value || 0);
+            const isPos = diff > 0;
+            const isZero = diff === 0;
+            return (
+              <span
+                className={`font-bold tabular-nums ${
+                  isZero
+                    ? 'text-slate-500'
+                    : isPos
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-rose-600 dark:text-rose-400'
+                }`}
+              >
+                {isZero ? '– 0' : `${isPos ? '+' : ''}${diff}`}
+              </span>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 };
 
-const Cell = ({ children, fill }) => <rect fill={fill} />;
 
 const ExportButton = ({ chartType, data, title, subtitle, filename }) => {
   const { exportToPDF, exportToExcel, prepareChartExportData } = require('../../utils/exportUtils');
@@ -87,29 +111,37 @@ const ExportButton = ({ chartType, data, title, subtitle, filename }) => {
 const DriverComparisonChart = ({
   drivers = [],
   trips = [],
+  tripsB = [],
   title = 'Driver Trip Comparison',
   height = 300,
   isLoading = false,
+  compareMode = false,
+  rangeALabel = 'Range A',
+  rangeBLabel = 'Range B',
 }) => {
   const chartData = useMemo(() => {
-    if (!drivers.length || !trips.length) return [];
+    if (!drivers.length) return [];
 
-    return drivers.map((driver) => {
-      const driverTrips = trips.filter((t) => t.driver?.id === driver.id);
-      const completedTrips = driverTrips.filter((t) => t.status === 'COMPLETED');
+    return drivers
+      .map((driver) => {
+        const driverTripsA = trips.filter((t) => t.driver?.id === driver.id);
+        const driverTripsB = tripsB.filter((t) => t.driver?.id === driver.id);
+        const completedTrips = driverTripsA.filter((t) => t.status === 'COMPLETED');
 
-      return {
-        name: driver.user?.username || driver.name || `Driver ${driver.id.slice(-4)}`,
-        totalTrips: driverTrips.length,
-        completedTrips: completedTrips.length,
-      };
-    }).filter((d) => d.totalTrips > 0 || d.completedTrips > 0);
-  }, [drivers, trips]);
-
-  const maxTrips = useMemo(() => {
-    if (!chartData.length) return 10;
-    return Math.max(...chartData.flatMap((d) => [d.totalTrips, d.completedTrips]));
-  }, [chartData]);
+        return {
+          name: driver.user?.username || driver.name || `Driver ${String(driver.id).slice(-4)}`,
+          totalTrips: driverTripsA.length,
+          completedTrips: completedTrips.length,
+          tripsA: driverTripsA.length,
+          tripsB: driverTripsB.length,
+        };
+      })
+      .filter((d) =>
+        compareMode
+          ? d.tripsA > 0 || d.tripsB > 0
+          : d.totalTrips > 0 || d.completedTrips > 0
+      );
+  }, [drivers, trips, tripsB, compareMode]);
 
   const hasData = chartData.length > 0;
 
@@ -134,17 +166,24 @@ const DriverComparisonChart = ({
 
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800 flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
             <Icon name="Users" size={18} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
               {title}
+              {compareMode && (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  Side-by-Side
+                </span>
+              )}
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Total vs completed trips per driver
+              {compareMode
+                ? `Trips in ${rangeALabel} vs ${rangeBLabel} per driver`
+                : 'Total vs completed trips per driver'}
             </p>
           </div>
         </div>
@@ -203,12 +242,12 @@ const DriverComparisonChart = ({
                 interval={0}
                 dy={5}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip compareMode={compareMode} />} />
               <Legend
                 wrapperStyle={{ paddingTop: 10 }}
                 formatter={(value) => (
                   <span className="capitalize text-xs font-medium text-slate-700 dark:text-slate-300">
-                    {value.replace('Trips', '').trim() || value}
+                    {value}
                   </span>
                 )}
                 iconType="circle"
@@ -216,28 +255,41 @@ const DriverComparisonChart = ({
                 layout="horizontal"
                 align="center"
               />
-              <Bar
-                dataKey="totalTrips"
-                name="Total Trips"
-                fill="#2563eb"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={28}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`total-${index}`} fill="#2563eb" />
-                ))}
-              </Bar>
-              <Bar
-                dataKey="completedTrips"
-                name="Completed Trips"
-                fill="#10b981"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={28}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`completed-${index}`} fill="#10b981" />
-                ))}
-              </Bar>
+              {compareMode ? (
+                <>
+                  <Bar
+                    dataKey="tripsA"
+                    name={rangeALabel || 'Range A Trips'}
+                    fill="#2563eb"
+                    radius={[0, 4, 4, 0]}
+                    maxBarSize={22}
+                  />
+                  <Bar
+                    dataKey="tripsB"
+                    name={rangeBLabel || 'Range B Trips'}
+                    fill="#818cf8"
+                    radius={[0, 4, 4, 0]}
+                    maxBarSize={22}
+                  />
+                </>
+              ) : (
+                <>
+                  <Bar
+                    dataKey="totalTrips"
+                    name="Total Trips"
+                    fill="#2563eb"
+                    radius={[0, 4, 4, 0]}
+                    maxBarSize={28}
+                  />
+                  <Bar
+                    dataKey="completedTrips"
+                    name="Completed Trips"
+                    fill="#10b981"
+                    radius={[0, 4, 4, 0]}
+                    maxBarSize={28}
+                  />
+                </>
+              )}
             </BarChart>
           </ResponsiveContainer>
         </div>

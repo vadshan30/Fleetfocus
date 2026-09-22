@@ -28,6 +28,7 @@ const StatCard = ({
   value = '0',
   subtext = '',
   trend = null,
+  delta = null,
   progress = null,
   className = '',
 }) => {
@@ -36,7 +37,7 @@ const StatCard = ({
   const progressColorClass = progressVariants[progress?.color || iconColor] || progressVariants.blue;
 
   const renderTrend = () => {
-    if (!trend) return null;
+    if (!trend || delta) return null;
     const { value: trendValue, direction = 'neutral' } = trend;
 
     const trendConfig = {
@@ -64,6 +65,39 @@ const StatCard = ({
     );
   };
 
+  const renderDelta = () => {
+    if (!delta) return null;
+
+    const pct = typeof delta === 'number' ? delta : (delta.percentChange ?? delta.percent ?? 0);
+    const dir = delta.direction ? delta.direction.toUpperCase() : (pct > 0.05 ? 'UP' : pct < -0.05 ? 'DOWN' : 'FLAT');
+    const isGood = delta.invertColor ? dir === 'DOWN' : dir === 'UP';
+    const isBad = delta.invertColor ? dir === 'UP' : dir === 'DOWN';
+
+    let badgeClass = 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+    let text = `– 0.0%`;
+
+    if (dir === 'UP') {
+      badgeClass = isGood
+        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+        : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800';
+      text = `↑ +${Math.abs(pct).toFixed(1)}%`;
+    } else if (dir === 'DOWN') {
+      badgeClass = isBad
+        ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
+        : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800';
+      text = `↓ -${Math.abs(pct).toFixed(1)}%`;
+    }
+
+    return (
+      <span
+        title={delta.label ? `vs ${delta.label}` : 'Period-over-period change'}
+        className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border tabular-nums shadow-xs ${badgeClass}`}
+      >
+        <span>{text}</span>
+      </span>
+    );
+  };
+
   return (
     <div
       className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between ${className}`}
@@ -78,11 +112,12 @@ const StatCard = ({
           </div>
         </div>
 
-        <div className="flex items-baseline gap-2.5 mt-1">
+        <div className="flex items-baseline gap-2.5 mt-1 flex-wrap">
           <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 tabular-nums">
             {value}
           </span>
           {renderTrend()}
+          {renderDelta()}
         </div>
 
         {subtext && (

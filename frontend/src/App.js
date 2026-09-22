@@ -27,6 +27,7 @@ import AlertCenterPage from './components/alerts/AlertCenterPage';
 import AlertRulesPage from './components/settings/AlertRulesPage';
 import PlaybackPage from './components/playback/PlaybackPage';
 import DriverApp from './components/driver-app/DriverApp';
+import AnalyticsPage from './components/analytics/AnalyticsPage';
 
 import './App.css';
 
@@ -143,6 +144,14 @@ function App() {
               element={
                 <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER']}>
                   <TripList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute roles={['FLEET_MANAGER', 'DISPATCHER']}>
+                  <AnalyticsPage />
                 </ProtectedRoute>
               }
             />
