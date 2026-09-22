@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuth from './hooks/useAuth';
 
 // Auth & Access Control
@@ -26,6 +26,7 @@ import LiveFleetPage from './components/live/LiveFleetPage';
 import AlertCenterPage from './components/alerts/AlertCenterPage';
 import AlertRulesPage from './components/settings/AlertRulesPage';
 import PlaybackPage from './components/playback/PlaybackPage';
+import DriverApp from './components/driver-app/DriverApp';
 
 import './App.css';
 
@@ -47,6 +48,9 @@ function App() {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
+  const location = useLocation();
+  const isDriverAppRoute = location.pathname === '/driver-app';
+
   // ============ NOT LOGGED IN ============
   if (!user) {
     return (
@@ -60,7 +64,26 @@ function App() {
     );
   }
 
-  // ============ LOGGED IN ============
+  // ============ DEDICATED DRIVER MOBILE APP VIEW ============
+  if (isDriverAppRoute) {
+    return (
+      <>
+        <NotificationStack />
+        <Routes>
+          <Route
+            path="/driver-app"
+            element={
+              <ProtectedRoute roles={['DRIVER']}>
+                <DriverApp />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </>
+    );
+  }
+
+  // ============ LOGGED IN DESKTOP PORTAL ============
   return (
     <div className="app-container">
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
@@ -136,6 +159,14 @@ function App() {
               element={
                 <ProtectedRoute roles={['DRIVER']}>
                   <MyVehiclePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/driver-app"
+              element={
+                <ProtectedRoute roles={['DRIVER']}>
+                  <DriverApp />
                 </ProtectedRoute>
               }
             />

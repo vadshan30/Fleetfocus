@@ -54,7 +54,12 @@ const driverService = {
       console.error('Error registering driver:', error);
       throw error;
     }
-  }
+  },
+
+  getMyVehicle: async () => {
+    const response = await api.get('/drivers/me/vehicle');
+    return response.data;
+  },
 };
 
 export default driverService;

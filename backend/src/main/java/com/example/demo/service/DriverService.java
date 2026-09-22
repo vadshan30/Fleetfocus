@@ -3,9 +3,13 @@ package com.example.demo.service;
 import com.example.demo.entity.Driver;
 import com.example.demo.entity.DriverStatus;
 import com.example.demo.entity.SystemUser;
+import com.example.demo.entity.Trip;
+import com.example.demo.entity.TripStatus;
+import com.example.demo.entity.Vehicle;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repository.DriverRepository;
 import com.example.demo.repository.SystemUserRepository;
+import com.example.demo.repository.TripRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +23,9 @@ public class DriverService {
 
     @Autowired
     private SystemUserRepository systemUserRepository;
+
+    @Autowired
+    private TripRepository tripRepository;
 
     public List<Driver> getAllDrivers() {
         return driverRepository.findAll();
@@ -64,5 +71,33 @@ public class DriverService {
     public void deleteDriver(Long id) {
         Driver driver = getDriverById(id);
         driverRepository.delete(driver);
+    }
+
+    public Vehicle getVehicleForCurrentDriver(String username) {
+        List<Trip> trips = tripRepository.findByDriverUsername(username);
+        if (trips == null || trips.isEmpty()) {
+            return null;
+        }
+
+        // If driver has an active trip (IN_PROGRESS or SCHEDULED) -> that vehicle
+        for (Trip trip : trips) {
+            if (trip.getStatus() == TripStatus.IN_PROGRESS && trip.getVehicle() != null) {
+                return trip.getVehicle();
+            }
+        }
+        for (Trip trip : trips) {
+            if (trip.getStatus() == TripStatus.SCHEDULED && trip.getVehicle() != null) {
+                return trip.getVehicle();
+            }
+        }
+
+        // Else -> most recently assigned vehicle (from last completed trip)
+        for (Trip trip : trips) {
+            if (trip.getVehicle() != null) {
+                return trip.getVehicle();
+            }
+        }
+
+        return null;
     }
 }

@@ -50,6 +50,21 @@ const tripService = {
     const response = await api.get(`/trips/vehicle/${vehicleId}`);
     return response.data;
   },
+
+  startByDriver: async (tripId) => {
+    const response = await api.post(`/trips/${tripId}/start-by-driver`);
+    return response.data;
+  },
+
+  endByDriver: async (tripId, distanceKm) => {
+    const response = await api.post(`/trips/${tripId}/end-by-driver`, { distanceKm });
+    return response.data;
+  },
+
+  reportIssue: async (tripId, issueData) => {
+    const response = await api.post(`/trips/${tripId}/report-issue`, issueData);
+    return response.data;
+  },
 };
 
 export default tripService;

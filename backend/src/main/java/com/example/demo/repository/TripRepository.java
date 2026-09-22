@@ -31,4 +31,9 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     @Query("SELECT t FROM Trip t WHERE t.vehicle.id = :vehicleId " +
            "AND t.status IN (com.example.demo.entity.TripStatus.SCHEDULED, com.example.demo.entity.TripStatus.IN_PROGRESS)")
     List<Trip> findActiveByVehicleId(@Param("vehicleId") Long vehicleId);
+
+    @Query("SELECT t FROM Trip t WHERE t.driver.user.username = :username " +
+           "AND t.status IN (com.example.demo.entity.TripStatus.SCHEDULED, com.example.demo.entity.TripStatus.IN_PROGRESS) " +
+           "ORDER BY t.scheduledStartTime ASC")
+    List<Trip> findActiveByDriverUsername(@Param("username") String username);
 }

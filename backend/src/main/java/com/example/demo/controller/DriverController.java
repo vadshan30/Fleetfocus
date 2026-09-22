@@ -1,11 +1,14 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.Driver;
+import com.example.demo.entity.Vehicle;
 import com.example.demo.service.DriverService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -63,5 +66,16 @@ public class DriverController {
     public ResponseEntity<String> deleteDriver(@PathVariable Long id) {
         driverService.deleteDriver(id);
         return ResponseEntity.ok("Driver deleted successfully.");
+    }
+
+    @GetMapping("/me/vehicle")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<Vehicle> getMyVehicle() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Vehicle vehicle = driverService.getVehicleForCurrentDriver(auth.getName());
+        if (vehicle == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(vehicle);
     }
 }

@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "maintenance_logs")
@@ -16,17 +17,32 @@ public class MaintenanceLog {
     private Vehicle vehicle;
 
     @ManyToOne
-    @JoinColumn(name = "technician_id", nullable = false)
+    @JoinColumn(name = "technician_id", nullable = true)
     private SystemUser technician;
 
-    @Column(name = "service_date", nullable = false)
+    @Column(name = "service_date")
     private LocalDate serviceDate;
 
     @Column(nullable = false)
     private String description;
 
-    @Column(nullable = false)
-    private Double cost;
+    @Column
+    private Double cost = 0.0;
+
+    @Column(name = "type")
+    private String type;
+
+    @Column(name = "severity")
+    private String severity;
+
+    @Column(name = "reported_at")
+    private LocalDateTime reportedAt;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "reported_by")
+    private String reportedBy;
 
     public MaintenanceLog() {
     }
@@ -111,5 +127,45 @@ public class MaintenanceLog {
 
     public void setCost(Double cost) {
         this.cost = cost;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getSeverity() {
+        return severity;
+    }
+
+    public void setSeverity(String severity) {
+        this.severity = severity;
+    }
+
+    public LocalDateTime getReportedAt() {
+        return reportedAt;
+    }
+
+    public void setReportedAt(LocalDateTime reportedAt) {
+        this.reportedAt = reportedAt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getReportedBy() {
+        return reportedBy;
+    }
+
+    public void setReportedBy(String reportedBy) {
+        this.reportedBy = reportedBy;
     }
 }

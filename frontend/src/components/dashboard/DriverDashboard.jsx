@@ -162,7 +162,16 @@ const DriverDashboard = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3 shrink-0 flex-wrap">
+            {user?.role === 'DRIVER' && (
+              <button
+                onClick={() => navigate('/driver-app')}
+                className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl text-xs shadow-md transition-all flex items-center gap-2"
+              >
+                <Icon name="Smartphone" size={16} />
+                <span>Switch to Driver App</span>
+              </button>
+            )}
             <button
               onClick={() => navigate('/my-trips')}
               className="px-4 py-2.5 bg-white text-blue-700 hover:bg-blue-50 font-bold rounded-xl text-xs shadow-md transition-all flex items-center gap-2"

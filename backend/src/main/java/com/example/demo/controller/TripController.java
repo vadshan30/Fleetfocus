@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.MaintenanceIssueDto;
 import com.example.demo.dto.TripEtaDto;
+import com.example.demo.entity.MaintenanceLog;
 import com.example.demo.entity.Trip;
 import com.example.demo.service.TripService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -226,5 +228,52 @@ public class TripController {
             @PathVariable Long id) {
         TripEtaDto etaDto = tripService.getTripEta(id);
         return ResponseEntity.ok(etaDto);
+    }
+
+    @Operation(
+            summary = "Start trip by driver",
+            description = "Allows an assigned driver to transition a SCHEDULED trip to IN_PROGRESS."
+    )
+    @PostMapping("/{id}/start-by-driver")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<Trip> startTripByDriver(@PathVariable Long id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Trip trip = tripService.startTripByDriver(id, auth.getName());
+        return ResponseEntity.ok(trip);
+    }
+
+    @Operation(
+            summary = "End trip by driver",
+            description = "Allows an assigned driver to complete their active trip and free the vehicle."
+    )
+    @PostMapping("/{id}/end-by-driver")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<Trip> endTripByDriver(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Double distanceKm = null;
+        if (body != null && body.containsKey("distanceKm") && body.get("distanceKm") != null) {
+            try {
+                distanceKm = Double.valueOf(body.get("distanceKm").toString());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        Trip trip = tripService.endTripByDriver(id, distanceKm, auth.getName());
+        return ResponseEntity.ok(trip);
+    }
+
+    @Operation(
+            summary = "Report maintenance issue from driver",
+            description = "Allows an assigned driver to report an issue for the vehicle on their trip."
+    )
+    @PostMapping("/{id}/report-issue")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<MaintenanceLog> reportIssueFromDriver(
+            @PathVariable Long id,
+            @RequestBody MaintenanceIssueDto dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        MaintenanceLog log = tripService.reportIssueFromDriver(id, dto, auth.getName());
+        return ResponseEntity.ok(log);
     }
 }

@@ -1,8 +1,10 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.MaintenanceIssueDto;
 import com.example.demo.dto.TripEtaDto;
 import com.example.demo.entity.Driver;
 import com.example.demo.entity.DriverStatus;
+import com.example.demo.entity.MaintenanceLog;
 import com.example.demo.entity.TelemetryData;
 import com.example.demo.entity.Trip;
 import com.example.demo.entity.TripStatus;
@@ -10,13 +12,16 @@ import com.example.demo.entity.Vehicle;
 import com.example.demo.entity.VehicleStatus;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repository.DriverRepository;
+import com.example.demo.repository.MaintenanceLogRepository;
 import com.example.demo.repository.TelemetryDataRepository;
 import com.example.demo.repository.TripRepository;
 import com.example.demo.repository.VehicleRepository;
 import com.example.demo.util.GeoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,6 +39,9 @@ public class TripService {
 
     @Autowired
     private TelemetryDataRepository telemetryDataRepository;
+
+    @Autowired
+    private MaintenanceLogRepository maintenanceLogRepository;
 
     public List<Trip> getAllTrips() {
         return tripRepository.findAll();
@@ -248,5 +256,96 @@ public class TripService {
                 remainingKm,
                 trip.getStatus()
         );
+    }
+
+    public Trip startTripByDriver(Long tripId, String username) {
+        Trip trip = getTripById(tripId);
+        if (trip.getDriver() == null || trip.getDriver().getUser() == null ||
+                !username.equalsIgnoreCase(trip.getDriver().getUser().getUsername())) {
+            throw new AccessDeniedException("You are not authorized to start this trip");
+        }
+        if (trip.getStatus() != TripStatus.SCHEDULED) {
+            throw new IllegalStateException("Trip is not in SCHEDULED status");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        trip.setStatus(TripStatus.IN_PROGRESS);
+        trip.setActualStartTime(now);
+        if (trip.getStartTime() == null) {
+            trip.setStartTime(now);
+        }
+
+        Vehicle vehicle = trip.getVehicle();
+        if (vehicle != null) {
+            vehicle.setStatus(VehicleStatus.ON_TRIP);
+            vehicleRepository.save(vehicle);
+        }
+
+        Driver driver = trip.getDriver();
+        if (driver != null) {
+            driver.setStatus(DriverStatus.ON_TRIP);
+            driverRepository.save(driver);
+        }
+
+        return tripRepository.save(trip);
+    }
+
+    public Trip endTripByDriver(Long tripId, Double distanceKm, String username) {
+        Trip trip = getTripById(tripId);
+        if (trip.getDriver() == null || trip.getDriver().getUser() == null ||
+                !username.equalsIgnoreCase(trip.getDriver().getUser().getUsername())) {
+            throw new AccessDeniedException("You are not authorized to end this trip");
+        }
+        if (trip.getStatus() != TripStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Trip is not in IN_PROGRESS status");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        trip.setStatus(TripStatus.COMPLETED);
+        trip.setActualEndTime(now);
+        if (trip.getEndTime() == null) {
+            trip.setEndTime(now);
+        }
+        if (distanceKm != null) {
+            trip.setDistanceCovered(distanceKm);
+        }
+
+        Vehicle vehicle = trip.getVehicle();
+        if (vehicle != null) {
+            vehicle.setStatus(VehicleStatus.AVAILABLE);
+            if (distanceKm != null && distanceKm > 0) {
+                vehicle.setCurrentMileage((vehicle.getCurrentMileage() != null ? vehicle.getCurrentMileage() : 0.0) + distanceKm);
+            }
+            vehicleRepository.save(vehicle);
+        }
+
+        Driver driver = trip.getDriver();
+        if (driver != null) {
+            driver.setStatus(DriverStatus.AVAILABLE);
+            driverRepository.save(driver);
+        }
+
+        return tripRepository.save(trip);
+    }
+
+    public MaintenanceLog reportIssueFromDriver(Long tripId, MaintenanceIssueDto dto, String username) {
+        Trip trip = getTripById(tripId);
+        if (trip.getDriver() == null || trip.getDriver().getUser() == null ||
+                !username.equalsIgnoreCase(trip.getDriver().getUser().getUsername())) {
+            throw new AccessDeniedException("You are not authorized to report issues for this trip");
+        }
+
+        MaintenanceLog log = new MaintenanceLog();
+        log.setVehicle(trip.getVehicle());
+        log.setType(dto != null && dto.getCategory() != null ? dto.getCategory() : "OTHER");
+        log.setDescription("Reported by driver: " + (dto != null && dto.getDescription() != null ? dto.getDescription() : ""));
+        log.setSeverity(dto != null && dto.getSeverity() != null ? dto.getSeverity() : "MEDIUM");
+        log.setReportedAt(LocalDateTime.now());
+        log.setServiceDate(LocalDate.now());
+        log.setStatus("PENDING");
+        log.setReportedBy(username);
+        log.setCost(0.0);
+
+        return maintenanceLogRepository.save(log);
     }
 }
