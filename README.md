@@ -392,8 +392,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ## Author
 
 - **Name**: SRI VADSHAN J
-- **Department**: Artificial Intelligence & Data Science (AI&DS-C)
-- **Subject**: Application and Development
 - **GitHub**: [@vadshan30](https://github.com/vadshan30)
 
 ---
