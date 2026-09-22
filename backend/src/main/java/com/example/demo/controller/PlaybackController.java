@@ -4,6 +4,7 @@ import com.example.demo.dto.TelemetrySnapshotDto;
 import com.example.demo.service.PlaybackService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -13,6 +14,8 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/playback")
+@CrossOrigin(origins = "http://localhost:3000")
+@PreAuthorize("isAuthenticated()")
 public class PlaybackController {
 
     private final PlaybackService playbackService;
@@ -22,6 +25,7 @@ public class PlaybackController {
     }
 
     @GetMapping("/range")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getTimeRange() {
         Map<String, LocalDateTime> range = playbackService.getTimeRange();
         if (range == null || range.isEmpty()) {
@@ -31,6 +35,7 @@ public class PlaybackController {
     }
 
     @GetMapping("/frame")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getFrameAt(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -43,6 +48,7 @@ public class PlaybackController {
     }
 
     @GetMapping("/timeline")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getTimeline(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

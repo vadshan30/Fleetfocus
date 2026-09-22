@@ -10,6 +10,10 @@ const api = {
 
 const getToken = () => {
   try {
+    const directToken = localStorage.getItem('token');
+    if (directToken) {
+      return directToken;
+    }
     const user = localStorage.getItem('user');
     if (user) {
       const parsedUser = JSON.parse(user);
