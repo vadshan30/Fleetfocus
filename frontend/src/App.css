@@ -1130,3 +1130,81 @@ table button {
     gap: 10px;
   }
 }
+
+/* =========================================================
+   LOGIN PAGE DARK THEME & DISABLED STATES
+   ========================================================= */
+
+.login-input:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.login-eye-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.login-toggle-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+[data-theme="dark"] .login-page {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .login-right {
+  background: #0b0f19;
+}
+
+[data-theme="dark"] .login-form-new {
+  background: #1e293b;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid #334155;
+}
+
+[data-theme="dark"] .login-form-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .login-form-subtitle {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .login-label {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .login-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .login-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .login-input:disabled {
+  background: #1e293b;
+  color: #64748b;
+  border-color: #334155;
+  cursor: not-allowed;
+}
+
+[data-theme="dark"] .login-submit-btn:disabled {
+  background: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .login-toggle {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .login-toggle-btn {
+  color: #60a5fa;
+}

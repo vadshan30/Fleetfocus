@@ -1,19 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { NAV_ITEMS } from '../../config/navConfig';
 import DarkModeToggle from '../common/DarkModeToggle';
 import Icon from '../ui/Icon';
+import ConfirmDialog from '../ui/ConfirmDialog';
 import './Layout.css';
 
 const TopNavbar = ({ toggleSidebar }) => {
   const { user, isAuthorized, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   if (!user) return null;
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = () => {
     logout();
     navigate('/login');
   };
@@ -56,11 +62,21 @@ const TopNavbar = ({ toggleSidebar }) => {
           Welcome, {user.username}!
         </span>
         <DarkModeToggle />
-        <button onClick={handleLogout} className="ff-logout-btn flex items-center gap-1.5">
+        <button onClick={handleLogoutClick} className="ff-logout-btn flex items-center gap-1.5" aria-haspopup="dialog">
           <Icon name="LogOut" size={14} />
           <span>Logout</span>
         </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleConfirmLogout}
+        title="Sign Out?"
+        message="Are you sure you want to sign out of FleetFocus?"
+        confirmText="Sign Out"
+        cancelText="Cancel"
+      />
     </nav>
   );
 };

@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../store/slices/authSlice';
 import authService from '../services/authService';
+import Icon from './ui/Icon';
+import DarkModeToggle from './common/DarkModeToggle';
 
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -29,6 +31,7 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (loading) return; // Prevent double-submit
     const result = await dispatch(login({
       username: formData.username,
       password: formData.password
@@ -40,6 +43,7 @@ const Login = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (loading) return; // Prevent double-submit
     setRegisterError('');
 
     // Special admin code validation
@@ -118,7 +122,11 @@ const Login = () => {
         </div>
 
         {/* RIGHT SIDE - FORM */}
-        <div className="login-right">
+        <div className="login-right relative">
+          <div className="absolute top-6 right-6">
+            <DarkModeToggle />
+          </div>
+
           <form onSubmit={isRegister ? handleRegister : handleLogin} className="login-form-new">
             <h2 className="login-form-title">
               {isRegister ? 'Create Account' : 'Welcome Back'}
@@ -154,6 +162,7 @@ const Login = () => {
                 value={formData.username}
                 onChange={handleChange}
                 required
+                disabled={loading}
                 className="login-input"
               />
             </div>
@@ -168,6 +177,7 @@ const Login = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                   className="login-input"
                 />
               </div>
@@ -183,11 +193,13 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                   className="login-input login-input-password"
                 />
                 <button
                   type="button"
                   className="login-eye-btn"
+                  disabled={loading}
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? '👁️' : '👁️‍🗨️'}
@@ -202,6 +214,7 @@ const Login = () => {
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
+                  disabled={loading}
                   className="login-input"
                 >
                   <option value="DRIVER">Driver</option>
@@ -224,6 +237,7 @@ const Login = () => {
                   value={formData.adminCode}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                   className="login-input"
                   style={{ borderColor: '#fecaca' }}
                 />
@@ -240,15 +254,31 @@ const Login = () => {
               </div>
             )}
 
-            <button type="submit" disabled={loading} className="login-submit-btn">
-              {loading ? 'Processing...' : isRegister ? 'Create Account' : 'Login'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="login-submit-btn flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Icon name="Loader2" size={16} className="animate-spin" />
+                  <span>{isRegister ? 'Creating Account…' : 'Signing in…'}</span>
+                </>
+              ) : (
+                <span>{isRegister ? 'Create Account' : 'Login'}</span>
+              )}
             </button>
 
             <div className="login-toggle">
               <span>
                 {isRegister ? 'Already have an account?' : "Don't have an account?"}
               </span>
-              <button type="button" onClick={toggleMode} className="login-toggle-btn">
+              <button
+                type="button"
+                onClick={toggleMode}
+                disabled={loading}
+                className="login-toggle-btn"
+              >
                 {isRegister ? 'Sign In' : 'Create Account'}
               </button>
             </div>

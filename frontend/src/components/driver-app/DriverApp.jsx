@@ -13,11 +13,13 @@ import DriverMiniMap from './DriverMiniMap';
 import DriverBottomNav from './DriverBottomNav';
 import ReportIssueDrawer from './ReportIssueDrawer';
 import Icon from '../ui/Icon';
+import ConfirmDialog from '../ui/ConfirmDialog';
 import ErrorState from '../common/ErrorState';
 
 const DriverApp = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const [activeTab, setActiveTab] = useState('home');
   const [vehicle, setVehicle] = useState(null);
@@ -374,8 +376,7 @@ const DriverApp = () => {
                 <button
                   onClick={() => {
                     setShowProfileDrawer(false);
-                    logout();
-                    navigate('/login');
+                    setShowLogoutConfirm(true);
                   }}
                   className="w-full h-12 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 hover:bg-rose-100 dark:hover:bg-rose-900/40 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
                 >
@@ -387,6 +388,19 @@ const DriverApp = () => {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={() => {
+          logout();
+          navigate('/login');
+        }}
+        title="Sign Out?"
+        message="Are you sure you want to sign out of FleetFocus?"
+        confirmText="Sign Out"
+        cancelText="Cancel"
+      />
     </div>
   );
 };

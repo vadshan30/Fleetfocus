@@ -4,14 +4,20 @@ import { Link, useNavigate } from 'react-router-dom';
 import { logout } from '../../store/slices/authSlice';
 import alertService from '../../services/alertService';
 import DarkModeToggle from '../common/DarkModeToggle';
+import ConfirmDialog from '../ui/ConfirmDialog';
 
 const Navbar = () => {
   const user = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [unacknowledgedCount, setUnacknowledgedCount] = useState(0);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = () => {
     dispatch(logout());
     navigate('/login');
   };
@@ -66,8 +72,18 @@ const Navbar = () => {
       <div className="nav-user">
         <DarkModeToggle />
         <span>Welcome back, {user.username}!</span>
-        <button onClick={handleLogout}>Logout</button>
+        <button onClick={handleLogoutClick} aria-haspopup="dialog">Logout</button>
       </div>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleConfirmLogout}
+        title="Sign Out?"
+        message="Are you sure you want to sign out of FleetFocus?"
+        confirmText="Sign Out"
+        cancelText="Cancel"
+      />
     </nav>
   );
 };
